@@ -1,46 +1,46 @@
-type LoginArgs = {
+export type LoginArgs = {
   username: string;
   password: string;
 }
 
-type QuestionsArgs = {
+export type QuestionsArgs = {
   qnames: Array<string>;
   lang: string;
   loginSession: LoginSession;
 }
 
-type ContestsArgs = {
+export type ContestsArgs = {
   cnames: Array<string>;
   lang: string;
   loginSession: LoginSession;
 }
 
-type SubmitArgs = {
+export type SubmitArgs = {
   qlist: QList;
   progLang: string;
   file: string;
   loginSession: LoginSession;
 }
 
-type RunTestArgs = {
+export type RunTestArgs = {
   qlist: QList;
   buildCmd: Array<string>;
   execCmd: Array<string>;
 }
 
-type RunDebugArgs = {
+export type RunDebugArgs = {
   debugInput: string;
   buildCmd: Array<string>;
   execCmd: Array<string>;
 }
 
-type IOExample = {
+export type IOExample = {
   inputExample: string;
   outputExmaple: string;
   comments: string;
 }
 
-type QList = {
+export type QList = {
   url: string;
   timeMemoryLimit: string;
   title: string;
@@ -51,7 +51,7 @@ type QList = {
   ioExamples: Array<IOExample>;
 }
 
-type LoginSession = {
+export type LoginSession = {
   csrf_token: string;
   cookieString: string;
 }

@@ -3,12 +3,22 @@ import {
   getSetCookies,
 } from "https://deno.land/std@0.179.0/http/cookie.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import { DOMParser } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
-import "./types.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
+import {
+  ContestsArgs,
+  IOExample,
+  LoginArgs,
+  LoginSession,
+  QList,
+  QuestionsArgs,
+  RunDebugArgs,
+  RunTestArgs,
+  SubmitArgs,
+} from "./types.ts";
 
 const ATCODER_URL = "https://atcoder.jp";
 
-export async function main(denops: Denops): Promise<void> {
+export function main(denops: Denops): void {
   denops.dispatcher = {
     async login(args: unknown): Promise<unknown> { // {csrf_token, cookie}
       return await login(
@@ -21,13 +31,13 @@ export async function main(denops: Denops): Promise<void> {
       const qlist = new Array(0);
       let cookieString = (args as QuestionsArgs).loginSession.cookieString;
       for (const qname of (args as QuestionsArgs).qnames) {
-        let ret = await getQuestion(
+        const ret = await getQuestion(
           ATCODER_URL + "/contests/" + qname.split("_")[0] + "/tasks/" + qname,
           (args as QuestionsArgs).lang,
           cookieString,
         );
-        qlist.push((({ cookieString, ...rest }) => rest)(ret));
-        cookieString = ret.cookieString;
+        qlist.push(ret[0]);
+        cookieString = ret[1];
       }
       return {
         qlist: qlist,
@@ -42,16 +52,16 @@ export async function main(denops: Denops): Promise<void> {
       let cookieString = (args as ContestsArgs).loginSession.cookieString;
       const qlist = new Array(0);
       for (const cname of (args as ContestsArgs).cnames) {
-        let urls = await getContestsURLs(cname, cookieString);
+        const urls = await getContestsURLs(cname, cookieString);
         cookieString = urls.cookieString;
         for (const url of urls.urls) {
-          let ret = await getQuestion(
+          const ret = await getQuestion(
             url,
             (args as ContestsArgs).lang,
             cookieString,
           );
-          qlist.push((({ cookieString, ...rest }) => rest)(ret));
-          cookieString = ret.cookieString;
+          qlist.push(ret[0]);
+          cookieString = ret[1];
         }
       }
       return {
@@ -63,7 +73,7 @@ export async function main(denops: Denops): Promise<void> {
       };
     },
 
-    async submit(args: unknown): Progmise<unknown> {
+    async submit(args: unknown): Promise<unknown> {
       const url =
         (args as SubmitArgs).qlist.url.split("/").slice(0, -2).join("/") +
         "/submit";
@@ -114,7 +124,7 @@ export async function main(denops: Denops): Promise<void> {
       };
     },
 
-    async runTests(args: unknown): Promise<unknown> { // test automatically
+    async runTests(args: unknown): Promise<void> { // test automatically
       const buildResult = await new Deno.Command(
         (args as RunTestArgs).buildCmd[0],
         { args: (args as RunTestArgs).buildCmd.slice(1) },
@@ -163,7 +173,7 @@ export async function main(denops: Denops): Promise<void> {
       }
     },
 
-    async runDebug(args: unknown): Promise<unknown> { // test manually
+    async runDebug(args: unknown): Promise<void> { // test manually
       const buildResult = await new Deno.Command(
         (args as runtestargs).buildCmd[0],
         { args: (args as RunDebugArgs).buildCmd.slice(1) },
@@ -204,14 +214,14 @@ export async function main(denops: Denops): Promise<void> {
 }
 
 function mergeCookieString(cookies: Array<Cookie>): string {
-  let retCookieString: Array<string> = new Array();
+  const retCookieString: Array<string> = new Array(0);
   for (const cke of cookies) {
     retCookieString.push(cke.name + "=" + cke["value"]);
   }
   return retCookieString.join(";");
 }
 
-async function login(username: string, password: string) {
+async function login(username: string, password: string): Promise<LoginSession> {
   // get csrf token
   const req = await fetch(ATCODER_URL + "/login");
 
@@ -246,7 +256,7 @@ async function login(username: string, password: string) {
 
   if (cookieString.indexOf("success") < 0) {
     console.error("login failed.");
-    return {};
+    return { csrf_token: "", cookieString: ""};
   }
   console.log("login succeed.");
   return { csrf_token: csrf_token, cookieString: cookieString };
@@ -260,7 +270,7 @@ async function getContestsURLs(cname: string, cookieString: string) {
   });
 
   const cookies = getSetCookies(response.headers);
-  let retCookieString = mergeCookieString(cookies);
+  const retCookieString = mergeCookieString(cookies);
 
   // parse part
   const trs = new DOMParser().parseFromString(
@@ -283,18 +293,18 @@ async function getQuestion(
   url: string,
   lang: string,
   cookieString: string,
-): QList {
+): Promise<[QList, string]> {
   const response = await fetch(url, {
     headers: { cookie: cookieString },
     credentials: "include",
   });
 
   const cookies = getSetCookies(response.headers);
-  let retCookieString = mergeCookieString(cookies);
+  const retCookieString = mergeCookieString(cookies);
 
   const resText = await response.text();
   const parsed = parseQuestion(resText, lang);
-  return { ...{ url: url }, ...{ cookieString: retCookieString }, ...parsed };
+  return [{ ...{ url: url }, ...parsed }, retCookieString];
 }
 
 function parseQuestion(body: string, lang: string) {
@@ -312,7 +322,7 @@ function parseQuestion(body: string, lang: string) {
   let constraint: string;
   let inputStyle: string;
   let outputStyle: string;
-  let ioExamples: Array<IOExample> = new Array(0);
+  const ioExamples: Array<IOExample> = new Array(0);
 
   let problemReg = "問題文";
   let constraintReg = "制約";
@@ -366,11 +376,11 @@ function parseQuestion(body: string, lang: string) {
       parts[i].querySelector("h3") != null &&
       parts[i].querySelector("h3").textContent.indexOf(inputExampleReg) === 0
     ) {
-      let inputExample = parts[i++].querySelector("pre").textContent.replace(
+      const inputExample = parts[i++].querySelector("pre").textContent.replace(
         /\n+/g,
         "\n",
       ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
-      let outputExample = parts[i].querySelector("pre").textContent.replace(
+      const outputExample = parts[i].querySelector("pre").textContent.replace(
         /\n+/g,
         "\n",
       ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
@@ -420,10 +430,10 @@ function parseQuestion(body: string, lang: string) {
           "\t",
         ).replace(/\n*$/g, "");
       } else if (statements[i].textContent.indexOf("入力例") === 0) {
-        let inputExample = statements[++i].textContent.replace(/\n+/g, "\n")
+        const inputExample = statements[++i].textContent.replace(/\n+/g, "\n")
           .replace(/\t+/g, "\t").replace(/\n*$/g, "");
         i++;
-        let outputExample = statements[++i].textContent.replace(/\n+/g, "\n")
+        const outputExample = statements[++i].textContent.replace(/\n+/g, "\n")
           .replace(/\t+/g, "\t").replace(/\n*$/g, "");
         i++;
         let comments = "";
@@ -465,7 +475,7 @@ async function getLangId(lang: string, cookieString: string) {
   const body = await response.text();
 
   const cookies = getSetCookies(response.headers);
-  let retCookieString = mergeCookieString(cookies);
+  const retCookieString = mergeCookieString(cookies);
 
   const ids =
     new DOMParser().parseFromString(body, "text/html").querySelectorAll(
