@@ -221,7 +221,10 @@ function mergeCookieString(cookies: Array<Cookie>): string {
   return retCookieString.join(";");
 }
 
-async function login(username: string, password: string): Promise<LoginSession> {
+async function login(
+  username: string,
+  password: string,
+): Promise<LoginSession> {
   // get csrf token
   const req = await fetch(ATCODER_URL + "/login");
 
@@ -256,7 +259,7 @@ async function login(username: string, password: string): Promise<LoginSession> 
 
   if (cookieString.indexOf("success") < 0) {
     console.error("login failed.");
-    return { csrf_token: "", cookieString: ""};
+    return { csrf_token: "", cookieString: "" };
   }
   console.log("login succeed.");
   return { csrf_token: csrf_token, cookieString: cookieString };
