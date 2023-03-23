@@ -185,7 +185,9 @@ export function main(denops: Denops): void {
             console.log("AC");
           } else {
             console.log("WA");
-            console.log(new TextDecoder().decode(output.stdout));
+            console.log("Input Example\n" + ioExample.inputExample);
+            console.log("Output Example\n" + ioExample.outputExample);
+            console.log("Result\n" + new TextDecoder().decode(output.stdout));
           }
         } else {
           console.error("exec error");

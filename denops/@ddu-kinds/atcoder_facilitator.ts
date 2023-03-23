@@ -1,9 +1,11 @@
+import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import type { Actions } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
 import {
   ActionFlags,
   BaseKind,
   DduItem,
   PreviewContext,
+  Previewer,
 } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
 
 export interface ActionData {
@@ -35,9 +37,6 @@ export class Kind extends BaseKind<Params> {
     ) {
       for (const item of args.items) {
         const action = item.action as ActionData;
-        if (!action) {
-          return undefined;
-        }
         await args.denops.call("atcoder_facilitator#submit", {
           qdict: action.qdict,
         });
@@ -49,9 +48,6 @@ export class Kind extends BaseKind<Params> {
     ) {
       for (const item of args.items) {
         const action = item.action as ActionData;
-        if (!action) {
-          return undefined;
-        }
         await args.denops.call("atcoder_facilitator#runTests", {
           qdict: action.qdict,
         });
@@ -70,12 +66,12 @@ export class Kind extends BaseKind<Params> {
   ): Promise<Previewer | undefined> {
     const action = args.item.action as ActionData;
     if (!action) {
-      return undefined;
+      return await Promise.resolve(undefined);
     }
-    return {
+    return await Promise.resolve({
       kind: "nofile",
       contents: refineQDict(action.qdict),
-    };
+    });
   }
 
   override params(): Params {
