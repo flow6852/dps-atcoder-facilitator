@@ -1,3 +1,6 @@
+import { QDict } from "./qdict.ts"
+import { SessionDict } from "./session.ts"
+
 export type LoginArgs = {
   username: string;
   password: string;
@@ -6,24 +9,24 @@ export type LoginArgs = {
 export type QuestionsArgs = {
   qnames: Array<string>;
   lang: string;
-  loginSession: LoginSession;
+  session: SessionDict;
 };
 
 export type ContestsArgs = {
   cnames: Array<string>;
   lang: string;
-  loginSession: LoginSession;
+  session: SessionDict;
 };
 
 export type SubmitArgs = {
-  qlist: QList;
+  qdict: QDict;
   progLang: string;
   file: string;
-  loginSession: LoginSession;
+  session: SessionDict;
 };
 
 export type RunTestArgs = {
-  qlist: QList;
+  qdict: QDict;
   buildCmd: Array<string>;
   execCmd: Array<string>;
 };
@@ -36,22 +39,7 @@ export type RunDebugArgs = {
 
 export type IOExample = {
   inputExample: string;
-  outputExmaple: string;
-  comments: string;
+  outputExample: string;
+  comment: string | undefined;
 };
 
-export type QList = {
-  url: string;
-  timeMemoryLimit: string;
-  title: string;
-  problem: string;
-  constraint: string;
-  inputStyle: string;
-  outputStyle: string;
-  ioExamples: Array<IOExample>;
-};
-
-export type LoginSession = {
-  csrf_token: string;
-  cookieString: string;
-};

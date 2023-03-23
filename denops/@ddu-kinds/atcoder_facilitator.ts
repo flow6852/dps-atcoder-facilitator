@@ -7,7 +7,7 @@ import {
 } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
 
 export interface ActionData {
-  qlist: QList;
+  qdict: QDict;
 }
 
 type IOExample = {
@@ -16,7 +16,7 @@ type IOExample = {
   comments: string;
 };
 
-type QList = {
+type QDict = {
   timeMemoryLimit: string;
   title: string;
   problem: string;
@@ -39,7 +39,7 @@ export class Kind extends BaseKind<Params> {
           return undefined;
         }
         await args.denops.call("atcoder_facilitator#submit", {
-          qlist: action.qlist,
+          qdict: action.qdict,
         });
       }
       return ActionFlags.None;
@@ -53,7 +53,7 @@ export class Kind extends BaseKind<Params> {
           return undefined;
         }
         await args.denops.call("atcoder_facilitator#runTests", {
-          qlist: action.qlist,
+          qdict: action.qdict,
         });
       }
       return ActionFlags.None;
@@ -74,7 +74,7 @@ export class Kind extends BaseKind<Params> {
     }
     return {
       kind: "nofile",
-      contents: refineQList(action.qlist),
+      contents: refineQDict(action.qdict),
     };
   }
 
@@ -83,26 +83,26 @@ export class Kind extends BaseKind<Params> {
   }
 }
 
-function refineQList(qlist: QList): Array<string> {
+function refineQDict(qdict: QDict): Array<string> {
   let ret: Array<string> = [];
   // title
   ret.push("Title");
-  ret.push(qlist.title);
+  ret.push(qdict.title);
 
   // timeMemoryLimit
-  ret.push(qlist.timeMemoryLimit);
+  ret.push(qdict.timeMemoryLimit);
 
   // problem
   ret.push("Problem");
-  ret = ret.concat(qlist.problem.split("\n"));
+  ret = ret.concat(qdict.problem.split("\n"));
 
   // inputStyle
   ret.push("Input");
-  ret = ret.concat(qlist.inputStyle.split("\n"));
+  ret = ret.concat(qdict.inputStyle.split("\n"));
 
   // outputStyle
   ret.push("Output");
-  ret = ret.concat(qlist.outputStyle.split("\n"));
+  ret = ret.concat(qdict.outputStyle.split("\n"));
 
   return ret;
 }

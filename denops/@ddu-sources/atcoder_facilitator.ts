@@ -8,7 +8,7 @@ import { join, resolve } from "https://deno.land/std@0.177.0/path/mod.ts";
 import { abortable } from "https://deno.land/std@0.171.0/async/mod.ts";
 
 type Params = {
-  qlist: Array<QList>;
+  qdict: Array<QDict>;
   cookieStr: string;
 };
 
@@ -18,7 +18,7 @@ type IOExample = {
   comments: string;
 }
 
-type QList = {
+type QDict = {
   timeMemoryLimit: string;
   title: string;
   problem: string;
@@ -39,11 +39,11 @@ export class Source extends BaseSource<Params> {
       async start(controller) {
         // get all contests ... commming soon ?
         const items: Item[] = []
-        for (const item of args.sourceParams.qlist) {
+        for (const item of args.sourceParams.qdict) {
           items.push({
             word: item.title,
             action: {
-              qlist: item
+              qdict: item
             }
           });
         }
