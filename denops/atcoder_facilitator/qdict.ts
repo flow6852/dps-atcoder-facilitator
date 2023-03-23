@@ -2,7 +2,6 @@ import { IOExample } from "./types.ts";
 import { Session } from "./session.ts";
 import {
   DOMParser,
-  Element,
   HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { getSetCookies } from "https://deno.land/std@0.179.0/http/cookie.ts";
@@ -89,16 +88,16 @@ export class Question {
   }
 
   private parseQuestion(doc: HTMLDocument, lang: string): void {
-    const title = doc.querySelector("title");
-    if (title == null) return;
+    const title = doc.getElementsByTagName("title")[0];
+    // if (title == null) return;
 
-    const row = doc.querySelector(".row");
-    if (row == null) return;
+    const row = doc.getElementsByClassName("row");
+    // if (row == null) return;
 
-    const rowDoc = row.children.item(1);
+    const rowDoc = row[0];
     // // Time Limit / Memory Limit
-    const timeMemoryLimit = rowDoc.querySelector("p");
-    if (timeMemoryLimit == null) return;
+    const timeMemoryLimit = rowDoc.getElementsByTagName("p")[0];
+    // if (timeMemoryLimit == null) return;
 
     let problem: string | undefined = undefined;
     let constraint: string | undefined = undefined;
@@ -107,7 +106,7 @@ export class Question {
     const ioExamples: Array<IOExample> = new Array(0);
 
     // task statement
-    const parts = rowDoc.querySelectorAll(".part");
+    const parts = rowDoc.getElementsByClassName("part");
 
     let problemReg = "問題文";
     let constraintReg = "制約";
@@ -116,7 +115,7 @@ export class Question {
     let inputExampleReg = "入力例";
     let outputExampleReg = "出力例";
 
-    if (lang == "en" && rowDoc.querySelectorAll(".lang-" + lang).length > 0) {
+    if (lang == "en" && rowDoc.getElementsByClassName("lang-" + lang).length > 0) {
       problemReg = "Problem Statement";
       constraintReg = "Constraints";
       inputStyleReg = "Input";
@@ -158,22 +157,22 @@ export class Question {
           "",
         ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "");
       } else if (
-        parts[i].querySelector("h3") != null &&
-        parts[i].querySelector("h3").textContent.indexOf(inputExampleReg) === 0
+        parts[i].getElementsByTagName("h3") != null &&
+        parts[i].getElementsByTagName("h3")[0].textContent.indexOf(inputExampleReg) === 0
       ) {
-        const inputExample: string = parts[i++].querySelector("pre").textContent
+        const inputExample: string = parts[i++].getElementsByTagName("pre")[0].textContent
           .replace(
             /\n+/g,
             "\n",
           ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
-        const outputExample: string = parts[i].querySelector("pre").textContent
+        const outputExample: string = parts[i].getElementsByTagName("pre")[0].textContent
           .replace(
             /\n+/g,
             "\n",
           ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
         let comment: string | undefined = undefined;
         if (parts[i].querySelector("p") != null) {
-          comment = parts[i].querySelector("p").textContent.replace(
+          comment = parts[i].getElementsByTagName("p")[0].textContent.replace(
             /\n+/g,
             "\n",
           )

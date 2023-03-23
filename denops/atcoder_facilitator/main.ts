@@ -1,8 +1,6 @@
 import { getSetCookies } from "https://deno.land/std@0.179.0/http/cookie.ts";
 import {
   DOMParser,
-  Element,
-  HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import {
@@ -31,7 +29,7 @@ export function main(denops: Denops): void {
 
     async getQuestions(args: unknown): Promise<unknown> {
       const qdict = new Array(0);
-      const session = new Session((args as QuestionsArgs).session)
+      const session = new Session((args as QuestionsArgs).session);
       for (const qname of (args as QuestionsArgs).qnames) {
         const question = new Question(
           ATCODER_URL + "/contests/" + qname.split("_")[0] + "/tasks/" + qname,
@@ -59,6 +57,7 @@ export function main(denops: Denops): void {
       const session = new Session((args as ContestsArgs).session);
       const qdict = new Array(0);
       for (const cname of (args as ContestsArgs).cnames) {
+        await getContestsURLs(cname, session);
         const urls = await getContestsURLs(cname, session);
         for (const url of urls) {
           const question = new Question(url);
@@ -83,7 +82,7 @@ export function main(denops: Denops): void {
     },
 
     async submit(args: unknown): Promise<unknown> {
-      const session = new Session((args as SubmitArgs).session)
+      const session = new Session((args as SubmitArgs).session);
       const url =
         (args as SubmitArgs).qdict.url.split("/").slice(0, -2).join("/") +
         "/submit";
@@ -98,6 +97,8 @@ export function main(denops: Denops): void {
         (args as SubmitArgs).progLang,
         session,
       );
+      if (getIds == null) return { sessoin: session };
+
       const sourceCode = await Deno.readTextFile(
         (await denops.call("getcwd") as string) + "/" +
           (args as SubmitArgs).file,
@@ -125,8 +126,8 @@ export function main(denops: Denops): void {
         console.log("submit succeed.");
       } else {
         console.error("submit failed.");
-        console.log("data.TaskScreenName = " + taskScreenName);
-        console.log(
+        console.error("data.TaskScreenName = " + taskScreenName);
+        console.error(
           "data.LanguageId = " + getIds + "(" +
             (args as SubmitArgs).progLang + ")",
         );
@@ -144,8 +145,15 @@ export function main(denops: Denops): void {
       ).output();
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
+        return;
       }
-      for (const ioExample of (args as RunTestArgs).qdict.ioExamples) {
+
+      const question = new Question((args as RunTestArgs).qdict);
+      if (question.ioExamples == undefined) {
+        console.error("question not found ioExample");
+        return;
+      }
+      for (const ioExample of question.ioExamples) {
         const echoOutputExample = await new Deno.Command("echo", {
           args: ["-e", ioExample.inputExample],
           stdout: "piped",
@@ -242,7 +250,10 @@ function matchResultOutput(result: string, output: string): boolean {
   return ret;
 }
 
-async function getContestsURLs(cname: string, session: Session): Promise<Array<string>> {
+async function getContestsURLs(
+  cname: string,
+  session: Session,
+): Promise<Array<string>> {
   const url = ATCODER_URL + "/contests/" + cname + "/tasks";
   const response = await fetch(url, {
     headers: { cookie: session.cookieString },
@@ -261,17 +272,11 @@ async function getContestsURLs(cname: string, session: Session): Promise<Array<s
   if (trs == null) {
     console.error("parse error");
   } else {
-    for (const tr of trs.querySelectorAll("tr")) {
-      if (
-        tr.children.item(0).querySelector("a") != null
-      ) {
-        urls.push(
-          ATCODER_URL +
-            (tr as Element).children.item(0).querySelector("a").getAttribute(
-              "href",
-            ),
-        );
-      }
+    for (const tr of trs.getElementsByTagName("tr")) {
+      if (tr.getElementsByTagName("a").length < 1) continue;
+      else {urls.push(
+          ATCODER_URL + tr.getElementsByTagName("a")[0].getAttribute("href"),
+        );}
     }
   }
   return urls;
@@ -280,7 +285,7 @@ async function getContestsURLs(cname: string, session: Session): Promise<Array<s
 async function getLangId(
   lang: string,
   session: Session,
-): Promise<string> {
+): Promise<string | null> {
   const response = await fetch(ATCODER_URL + "/contests/practice/submit", {
     method: "GET",
     headers: { cookie: session.cookieString },
@@ -288,8 +293,8 @@ async function getLangId(
   });
 
   const cookies = getSetCookies(response.headers);
-  session.updateCookieString(cookies)
-  let langid = "0";
+  session.updateCookieString(cookies);
+  let langid = null;
 
   const body = new DOMParser().parseFromString(
     await response.text(),
@@ -299,13 +304,13 @@ async function getLangId(
     console.error("parse error: " + ATCODER_URL + "/contests/practice/submit");
   } else {
     const ids = body
-      .querySelectorAll(
+      .getElementsByTagName(
         "select",
-      ).item(1).children;
-    for (let i = 1; i < ids.length; i++) {
-      if (ids.item(i).textContent === lang) {
-        langid = ids.item(i).getAttribute("value");
-      }
+      )[1].getElementsByTagName("option");
+    for (const id of ids) {
+      if (id.hasAttribute("value") && id.textContent === lang) {
+        langid = id.getAttribute("value");
+      } else continue;
     }
   }
   return langid;

@@ -43,9 +43,12 @@ export class Session {
     let cookies = getSetCookies(req.headers);
     let cookieString = mergeCookieString(cookies);
 
+    const revelSession = cookies.find((cookie) => cookie.name == "REVEL_SESSION")
+    if(revelSession == undefined) return;
+
     const csrf_token = findString(
       decodeURIComponent(
-        cookies.find((cookie) => cookie.name == "REVEL_SESSION").value,
+        revelSession.value,
       ).split(new RegExp("\x00")),
       "csrf_token",
     ).split(":")[1];
