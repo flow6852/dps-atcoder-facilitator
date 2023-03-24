@@ -16,6 +16,7 @@ export type QDict = {
   inputStyle?: string;
   outputStyle?: string;
   ioExamples?: Array<IOExample>;
+  sids: Array<string>;
 };
 
 export class Question {
@@ -28,6 +29,7 @@ export class Question {
   inputStyle?: string;
   outputStyle?: string;
   ioExamples?: Array<IOExample>;
+  sids: Array<string> = new Array(0);
 
   constructor(url: string);
   constructor(qdict: QDict);
@@ -42,6 +44,7 @@ export class Question {
       this.inputStyle = arg.inputStyle;
       this.outputStyle = arg.outputStyle;
       this.ioExamples = arg.ioExamples;
+      this.sids = arg.sids;
     }
   }
 
@@ -63,6 +66,7 @@ export class Question {
         inputStyle: this.inputStyle,
         outputStyle: this.outputStyle,
         ioExamples: this.ioExamples,
+        sids: this.sids,
       };
     }
   }
@@ -266,5 +270,13 @@ export class Question {
     this.inputStyle = inputStyle;
     this.outputStyle = outputStyle;
     this.ioExamples = ioExamples;
+  }
+
+  public appendSid(body: HTMLDocument): void{
+    const tds = body.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0].getElementsByTagName("td")
+    const sid = tds[tds.length - 1].getElementsByTagName("a")[0].getAttribute("href");
+    if (sid != null) {
+      this.sids.push(sid.split("/")[sid.split("/").length-1]);
+    }
   }
 }

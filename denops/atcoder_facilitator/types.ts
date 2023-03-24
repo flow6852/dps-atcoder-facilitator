@@ -43,3 +43,7 @@ export type IOExample = {
   comment: string | undefined;
 };
 
+export type ResultArgs = {
+  qdict: QDict,
+  session: SessionDict,
+}

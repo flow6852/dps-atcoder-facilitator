@@ -20,6 +20,7 @@ endfunction
 function! atcoder_facilitator#submit(arg) abort
     let ret = denops#request('atcoder_facilitator', 'submit', [extend(a:arg, {'file': expand('%'), 'progLang': g:atcoder_facilitator#progLang, 'session': g:atcoder_facilitator#session})])
     let g:atcoder_facilitator#session = get(ret, "session")
+    let g:atcoder_facilitator#qdict = extend(filter(g:atcoder_facilitator#qdict, {ind, val -> get(val, "url") == get(get(ret, "qdict"),"url")}), get(ret, "qdict"))
 endfunction
 
 function! atcoder_facilitator#runTests(arg) abort

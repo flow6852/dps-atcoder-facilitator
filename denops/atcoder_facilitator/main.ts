@@ -7,6 +7,7 @@ import {
   ContestsArgs,
   LoginArgs,
   QuestionsArgs,
+  ResultArgs,
   RunDebugArgs,
   RunTestArgs,
   SubmitArgs,
@@ -83,10 +84,11 @@ export function main(denops: Denops): void {
 
     async submit(args: unknown): Promise<unknown> {
       const session = new Session((args as SubmitArgs).session);
+      const qdict = new Question((args as SubmitArgs).qdict);
       const url =
-        (args as SubmitArgs).qdict.url.split("/").slice(0, -2).join("/") +
+        qdict.url.split("/").slice(0, -2).join("/") +
         "/submit";
-      const taskScreenName = (args as SubmitArgs).qdict.url.split("/").at(-1);
+      const taskScreenName = qdict.url.split("/").at(-1);
       if (taskScreenName == undefined) {
         return {
           session: (args as SubmitArgs).session,
@@ -122,7 +124,12 @@ export function main(denops: Denops): void {
       const response = await fetch(req);
 
       session.updateCookieString(getSetCookies(response.headers));
-      if (response.headers.has("location")) {
+      const locUrl = response.headers.get("location")
+      if (locUrl != null) {
+        const resForSid = await fetch(ATCODER_URL + locUrl, {headers: {cookie: session.cookieString }});
+        session.updateCookieString(getSetCookies(resForSid.headers))
+        const bodyForSid = new DOMParser().parseFromString(await resForSid.text(), "text/html")
+        if(resForSid.ok && bodyForSid != null) qdict.appendSid(bodyForSid);
         console.log("submit succeed.");
       } else {
         console.error("submit failed.");
@@ -134,6 +141,7 @@ export function main(denops: Denops): void {
       }
 
       return {
+        qdict: qdict.getQDict(),
         session: session,
       };
     },
@@ -231,6 +239,28 @@ export function main(denops: Denops): void {
       } else {
         console.error("exec error");
         console.error(new TextDecoder().decode(output.stderr));
+      }
+    },
+
+    async getResult(args: unknown): Promise<undefined> {
+      const url = (args as ResultArgs).qdict.url.split("/").slice(-2).join("/") + "/submissions/me"
+      const session: Session = new Session((args as ResultArgs).session)
+      const req: Request = new Request(url, {
+        method: "GET",
+        headers: { cookie: session.cookieString },
+        credentials: "include",
+      });
+      const response = await fetch(req);
+      session.updateCookieString(getSetCookies(response.headers))
+      
+      const tbodys = new DOMParser().parseFromString(await response.text(), "text/html")
+      if (tbodys == null){
+        console.error("getResult: parse failed")
+        return undefined
+      } else {
+        for (const tr of tbodys.getElementsByTagName("tr")[tbodys.getElementsByTagName("tr").length - 1].getElementsByTagName("td")){
+          tr.children[tr.children.length - 1].getAttribute("href")
+        }
       }
     },
   };
