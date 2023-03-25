@@ -13,10 +13,9 @@ export interface ActionData {
   rdict: RunTestResult;
 }
 
-type PreviewerKinds = "question" | "runTest" | "status";
-
 type PreviewParams = {
-  kind: PreviewerKinds;
+  kind: string;
+  actionedData: Array<RunTestResult>;
 };
 
 type IOExample = {
@@ -36,20 +35,22 @@ type QDict = {
 };
 
 type RunTestResult = {
-  status: string
-  inputExample: string,
-  outputExample: string,
-  result: string,
+  status: string;
+  inputExample: string;
+  outputExample: string;
+  result: string;
+};
+
+interface ActionFlagParams {
+  actionFlag: string;
 }
 
-type Params = {
-  actionFlag: string;
-};
+type Params = Record<never, never>;
 
 export class Kind extends BaseKind<Params> {
   override actions: Actions<Params> = {
     async submit(
-      args: { denops: Denops; items: DduItem[]; kindParams: Params },
+      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) {
       for (const item of args.items) {
         const action = item.action as ActionData;
@@ -57,10 +58,10 @@ export class Kind extends BaseKind<Params> {
           qdict: action.qdict,
         });
       }
-      return selectFlag(args.kindParams.actionFlag);
+      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
     },
     async runTests(
-      args: { denops: Denops; items: DduItem[]; kindParams: Params },
+      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) {
       for (const item of args.items) {
         const action = item.action as ActionData;
@@ -68,12 +69,10 @@ export class Kind extends BaseKind<Params> {
           qdict: action.qdict,
         });
       }
-      console.log(selectFlag(args.kindParams.actionFlag));
-      console.log(ActionFlags.Redraw)
-      return ActionFlags.Redraw 
+      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
     },
     async getStatus(
-      args: { denops: Denops; items: DduItem[]; kindParams: Params },
+      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) {
       for (const item of args.items) {
         const action = item.action as ActionData;
@@ -81,7 +80,7 @@ export class Kind extends BaseKind<Params> {
           qdict: action.qdict,
         });
       }
-      return selectFlag(args.kindParams.actionFlag);
+      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
     },
   };
 
@@ -106,10 +105,10 @@ export class Kind extends BaseKind<Params> {
           contents: refineQDict(action.qdict),
         };
         break;
-      case "runTest":
+      case "runTests":
         ret = {
           kind: "nofile",
-          contents: refineRunTestDict(action.rdict),
+          contents: refineRunTestDict(params.actionedData),
         };
         break;
       case "status":
@@ -128,9 +127,7 @@ export class Kind extends BaseKind<Params> {
   }
 
   override params(): Params {
-    return {
-      actionFlag: "None",
-    };
+    return {};
   }
 }
 
@@ -158,24 +155,33 @@ function refineQDict(qdict: QDict): Array<string> {
   return ret;
 }
 
-function refineRunTestDict(rdict: RunTestResult): Array<string>{
+function refineRunTestDict(rdict: Array<RunTestResult>): Array<string> {
   const ret: Array<string> = [];
-  ret.push(rdict.status);
-  ret.push(rdict.inputExample);
-  ret.push(rdict.outputExample);
-  ret.push(rdict.result);
-
+  for (let i = 0; i < rdict.length; i++) {
+    ret.push("Example " + (i+1)) 
+    ret.push(rdict[i].status);
+    ret.push(rdict[i].inputExample);
+    ret.push(rdict[i].outputExample);
+    ret.push(rdict[i].result);
+  }
   return ret;
 }
 
 function selectFlag(flagStr: string): ActionFlags {
   let ret: ActionFlags = ActionFlags.None;
-  console.log(flagStr)
   switch (flagStr) {
-    case "None": ret = ActionFlags.None; break;
-    case "RefreshItems": ret = ActionFlags.RefreshItems; break;
-    case "Redraw": ret = ActionFlags.Redraw; break;
-    case "Persist": ret = ActionFlags.Persist; break;
+    case "None":
+      ret = ActionFlags.None;
+      break;
+    case "RefreshItems":
+      ret = ActionFlags.RefreshItems;
+      break;
+    case "Redraw":
+      ret = ActionFlags.Redraw;
+      break;
+    case "Persist":
+      ret = ActionFlags.Persist;
+      break;
   }
   return ret;
 }

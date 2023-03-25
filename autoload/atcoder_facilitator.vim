@@ -1,3 +1,8 @@
+if exists('g:atcoder_facilitator_loaded')
+    finish
+endif
+let g:atcoder_facilitator_loaded = 1
+
 function! atcoder_facilitator#login() abort
     let l:username = inputsecret("username: ")
     let l:password = inputsecret("password: ")
@@ -28,7 +33,7 @@ function! atcoder_facilitator#submit(arg) abort
 endfunction
 
 function! atcoder_facilitator#runTests(arg) abort
-    call denops#request('atcoder_facilitator', 'runTests', [extend(a:arg, {'buildCmd': g:atcoder_facilitator#buildCmd, 'execCmd':g:atcoder_facilitator#execCmd})])
+    let g:atcoder_facilitator#rdict = denops#request('atcoder_facilitator', 'runTests', [extend(a:arg, {'buildCmd': g:atcoder_facilitator#buildCmd, 'execCmd':g:atcoder_facilitator#execCmd})])
 endfunction
 
 function! atcoder_facilitator#runDebug() abort

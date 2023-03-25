@@ -2,6 +2,7 @@ let g:atcoder_facilitator#session = {'cookieString': "", 'csrf_token': ""}
 let g:atcoder_facilitator#lang = 'ja'
 let g:atcoder_facilitator#progLang = 'Java (OpenJDK 11.0.6)'
 let g:atcoder_facilitator#qdict = [] " {qdict, timeMemoryLimit, title, score, problem, constraint, inputStyle, outputStyle, {inputExample, outputExample, comments}}
+let g:atcoder_facilitator#rdict = []
 let g:atcoder_facilitator#buildCmd = ['javac', expand('%')]
 let g:atcoder_facilitator#execCmd = ['java', expand('%:r')]
 
