@@ -7,9 +7,11 @@ import {
   ContestsArgs,
   LoginArgs,
   QuestionsArgs,
-  ResultArgs,
   RunDebugArgs,
   RunTestArgs,
+  RunTestResult,
+  StatusArgs,
+  StatusResult,
   SubmitArgs,
 } from "./types.ts";
 import { Question } from "./qdict.ts";
@@ -85,13 +87,13 @@ export function main(denops: Denops): void {
     async submit(args: unknown): Promise<unknown> {
       const session = new Session((args as SubmitArgs).session);
       const qdict = new Question((args as SubmitArgs).qdict);
-      const url =
-        qdict.url.split("/").slice(0, -2).join("/") +
+      const url = qdict.url.split("/").slice(0, -2).join("/") +
         "/submit";
       const taskScreenName = qdict.url.split("/").at(-1);
       if (taskScreenName == undefined) {
         return {
-          session: (args as SubmitArgs).session,
+          qdict: qdict.getQDict(),
+          session: session.getSessionDict(),
         };
       }
 
@@ -99,7 +101,12 @@ export function main(denops: Denops): void {
         (args as SubmitArgs).progLang,
         session,
       );
-      if (getIds == null) return { sessoin: session };
+      if (getIds == null) {
+        return {
+          qdict: qdict.getQDict(),
+          sessoin: session.getSessionDict(),
+        };
+      }
 
       const sourceCode = await Deno.readTextFile(
         (await denops.call("getcwd") as string) + "/" +
@@ -124,12 +131,21 @@ export function main(denops: Denops): void {
       const response = await fetch(req);
 
       session.updateCookieString(getSetCookies(response.headers));
-      const locUrl = response.headers.get("location")
+      console.log(response.headers);
+      const locUrl = response.headers.get("location");
+      const dateUrl = response.headers.get("date");
       if (locUrl != null) {
-        const resForSid = await fetch(ATCODER_URL + locUrl, {headers: {cookie: session.cookieString }});
-        session.updateCookieString(getSetCookies(resForSid.headers))
-        const bodyForSid = new DOMParser().parseFromString(await resForSid.text(), "text/html")
-        if(resForSid.ok && bodyForSid != null) qdict.appendSid(bodyForSid);
+        const resForSid = await fetch(ATCODER_URL + locUrl, {
+          headers: { cookie: session.cookieString },
+        });
+        session.updateCookieString(getSetCookies(resForSid.headers));
+        const bodyForSid = new DOMParser().parseFromString(
+          await resForSid.text(),
+          "text/html",
+        );
+        if (dateUrl && resForSid.ok && bodyForSid != null) {
+          qdict.appendSid(bodyForSid, dateUrl);
+        }
         console.log("submit succeed.");
       } else {
         console.error("submit failed.");
@@ -142,24 +158,25 @@ export function main(denops: Denops): void {
 
       return {
         qdict: qdict.getQDict(),
-        session: session,
+        session: session.getSessionDict(),
       };
     },
 
-    async runTests(args: unknown): Promise<void> { // test automatically
+    async runTests(args: unknown): Promise<unknown> { // test automatically
+      const results: Array<RunTestResult> = new Array(0);
       const buildResult = await new Deno.Command(
         (args as RunTestArgs).buildCmd[0],
         { args: (args as RunTestArgs).buildCmd.slice(1) },
       ).output();
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
-        return;
+        return results;
       }
 
       const question = new Question((args as RunTestArgs).qdict);
       if (question.ioExamples == undefined) {
         console.error("question not found ioExample");
-        return;
+        return results;
       }
       for (const ioExample of question.ioExamples) {
         const echoOutputExample = await new Deno.Command("echo", {
@@ -182,7 +199,6 @@ export function main(denops: Denops): void {
 
         const output = await execResult.output();
 
-        // getStatus
         if ((await execResult.status).success) {
           if (
             matchResultOutput(
@@ -190,21 +206,30 @@ export function main(denops: Denops): void {
               ioExample.outputExample,
             )
           ) {
-            console.log("AC");
+            results.push({
+              status: "AC",
+              inputExample: ioExample.inputExample,
+              outputExample: ioExample.outputExample,
+              result: new TextDecoder().decode(output.stdout),
+            });
           } else {
-            console.log("WA");
-            console.log("Input Example\n" + ioExample.inputExample);
-            console.log("Output Example\n" + ioExample.outputExample);
-            console.log("Result\n" + new TextDecoder().decode(output.stdout));
+            results.push({
+              status: "WA",
+              inputExample: ioExample.inputExample,
+              outputExample: ioExample.outputExample,
+              result: new TextDecoder().decode(output.stdout),
+            });
           }
         } else {
           console.error("exec error");
           console.error(new TextDecoder().decode(output.stderr));
         }
       }
+      return results;
     },
 
-    async runDebug(args: unknown): Promise<void> { // test manually
+    async runDebug(args: unknown): Promise<unknown> { // test manually
+      const results: Array<string> = new Array(0);
       const buildResult = await new Deno.Command(
         (args as RunTestArgs).buildCmd[0],
         { args: (args as RunDebugArgs).buildCmd.slice(1) },
@@ -233,35 +258,48 @@ export function main(denops: Denops): void {
 
       const output = await execResult.output();
 
-      // getStatus
       if ((await execResult.status).success) {
-        console.log(new TextDecoder().decode(output.stdout));
+        results.push(new TextDecoder().decode(output.stdout));
       } else {
         console.error("exec error");
         console.error(new TextDecoder().decode(output.stderr));
       }
+      return results;
     },
 
-    async getResult(args: unknown): Promise<undefined> {
-      const url = (args as ResultArgs).qdict.url.split("/").slice(-2).join("/") + "/submissions/me"
-      const session: Session = new Session((args as ResultArgs).session)
+    async getStatus(args: unknown): Promise<unknown> {
+      const session: Session = new Session((args as StatusArgs).session);
+      const statuses: Array<StatusResult> = Array(0);
+      const qdict = (args as StatusArgs).qdict;
+
+      const url = qdict.url.split("/").slice(0, -2).join("/") +
+        "/submissions/me/status/json";
       const req: Request = new Request(url, {
         method: "GET",
         headers: { cookie: session.cookieString },
+        redirect: "manual",
         credentials: "include",
       });
       const response = await fetch(req);
-      session.updateCookieString(getSetCookies(response.headers))
-      
-      const tbodys = new DOMParser().parseFromString(await response.text(), "text/html")
-      if (tbodys == null){
-        console.error("getResult: parse failed")
-        return undefined
-      } else {
-        for (const tr of tbodys.getElementsByTagName("tr")[tbodys.getElementsByTagName("tr").length - 1].getElementsByTagName("td")){
-          tr.children[tr.children.length - 1].getAttribute("href")
+      session.updateCookieString(getSetCookies(response.headers));
+
+      const responseJson = await response.json();
+      for (const key in responseJson.Result) {
+        const resHTML = new DOMParser().parseFromString(
+          "<table>" + responseJson.Result[key].Html + "</table>",
+          "text/html",
+        );
+        const sid = qdict.sids.find((sid) => sid.sid == Number(key));
+        if (resHTML && qdict.title && sid) {
+          statuses.push({
+            title: qdict.title,
+            sid: sid,
+            status: resHTML.getElementsByTagName("td")[0].textContent,
+          });
         }
       }
+
+      return { session: session.getSessionDict(), statuses: statuses };
     },
   };
 }

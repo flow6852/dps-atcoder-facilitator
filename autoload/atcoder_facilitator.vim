@@ -18,9 +18,13 @@ function! atcoder_facilitator#cgets(arg) abort
 endfunction
 
 function! atcoder_facilitator#submit(arg) abort
-    let ret = denops#request('atcoder_facilitator', 'submit', [extend(a:arg, {'file': expand('%'), 'progLang': g:atcoder_facilitator#progLang, 'session': g:atcoder_facilitator#session})])
-    let g:atcoder_facilitator#session = get(ret, "session")
-    let g:atcoder_facilitator#qdict = extend(filter(g:atcoder_facilitator#qdict, {ind, val -> get(val, "url") == get(get(ret, "qdict"),"url")}), get(ret, "qdict"))
+    let l:ret = denops#request('atcoder_facilitator', 'submit', [extend(a:arg, {'file': expand('%'), 'progLang': g:atcoder_facilitator#progLang, 'session': g:atcoder_facilitator#session})])
+    let g:atcoder_facilitator#session = get(l:ret, "session")
+    let l:befQDict = g:atcoder_facilitator#qdict
+    let g:atcoder_facilitator#qdict = []
+    for item in l:befQDict 
+        call add(g:atcoder_facilitator#qdict, get(item, "url") == get(get(l:ret, "qdict"),"url") ? get(l:ret, "qdict") : item)
+    endfor
 endfunction
 
 function! atcoder_facilitator#runTests(arg) abort
@@ -35,4 +39,9 @@ function! atcoder_facilitator#runDebug() abort
 		let tmp = input("input > ")
 	endwhile
     call denops#request('atcoder_facilitator', 'runDebug', [{'buildCmd': g:atcoder_facilitator#buildCmd, 'execCmd':g:atcoder_facilitator#execCmd, 'debugInput': join(txt, "\n")}])
+endfunction
+
+function! atcoder_facilitator#getStatus(arg) abort
+    echo a:arg
+    echo denops#request('atcoder_facilitator', 'getStatus', [extend(a:arg, {'session': g:atcoder_facilitator#session})])
 endfunction

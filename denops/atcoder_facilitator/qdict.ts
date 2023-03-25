@@ -1,4 +1,4 @@
-import { IOExample } from "./types.ts";
+import { IOExample, Sid } from "./types.ts";
 import { Session } from "./session.ts";
 import {
   DOMParser,
@@ -16,7 +16,7 @@ export type QDict = {
   inputStyle?: string;
   outputStyle?: string;
   ioExamples?: Array<IOExample>;
-  sids: Array<string>;
+  sids: Array<Sid>;
 };
 
 export class Question {
@@ -29,7 +29,7 @@ export class Question {
   inputStyle?: string;
   outputStyle?: string;
   ioExamples?: Array<IOExample>;
-  sids: Array<string> = new Array(0);
+  sids: Array<Sid> = new Array(0);
 
   constructor(url: string);
   constructor(qdict: QDict);
@@ -38,6 +38,7 @@ export class Question {
       this.url = arg;
     } else if (arg.kind === "QDict") {
       this.url = arg.url;
+      this.title = arg.title;
       this.timeMemoryLimit = arg.timeMemoryLimit;
       this.problem = arg.problem;
       this.constraint = arg.constraint;
@@ -272,11 +273,9 @@ export class Question {
     this.ioExamples = ioExamples;
   }
 
-  public appendSid(body: HTMLDocument): void{
+  public appendSid(body: HTMLDocument, date: string): void{
     const tds = body.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0].getElementsByTagName("td")
     const sid = tds[tds.length - 1].getElementsByTagName("a")[0].getAttribute("href");
-    if (sid != null) {
-      this.sids.push(sid.split("/")[sid.split("/").length-1]);
-    }
+    if (sid != null) this.sids.unshift({sid: Number(sid.split("/")[sid.split("/").length-1]), date: date});
   }
 }

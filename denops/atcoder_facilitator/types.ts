@@ -43,7 +43,25 @@ export type IOExample = {
   comment: string | undefined;
 };
 
-export type ResultArgs = {
+export type Sid = {
+  date: string;
+  sid: number;
+}
+
+export type StatusArgs = {
   qdict: QDict,
   session: SessionDict,
+}
+
+export type RunTestResult = {
+  status: string
+  inputExample: string,
+  outputExample: string,
+  result: string,
+}
+
+export type StatusResult = {
+  title: string;
+  sid: Sid;
+  status: string;
 }
