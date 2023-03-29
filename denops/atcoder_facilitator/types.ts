@@ -49,7 +49,7 @@ export type Sid = {
 }
 
 export type StatusArgs = {
-  qdict: QDict,
+  qdict: Array<QDict>,
   session: SessionDict,
 }
 
@@ -64,4 +64,10 @@ export type StatusResult = {
   title: string;
   sid: Sid;
   status: string;
+}
+
+export type StatusAfterSubmit = {
+  session: SessionDict,
+  qdict: QDict,
+  isRefreshDdu: boolean,
 }

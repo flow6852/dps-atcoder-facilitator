@@ -6,6 +6,7 @@ import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
+  StatusAfterSubmit,
   QuestionsArgs,
   RunDebugArgs,
   RunTestArgs,
@@ -131,9 +132,9 @@ export function main(denops: Denops): void {
       const response = await fetch(req);
 
       session.updateCookieString(getSetCookies(response.headers));
-      console.log(response.headers);
       const locUrl = response.headers.get("location");
       const dateUrl = response.headers.get("date");
+      let sid = -1;
       if (locUrl != null) {
         const resForSid = await fetch(ATCODER_URL + locUrl, {
           headers: { cookie: session.cookieString },
@@ -145,6 +146,7 @@ export function main(denops: Denops): void {
         );
         if (dateUrl && resForSid.ok && bodyForSid != null) {
           qdict.appendSid(bodyForSid, dateUrl);
+          sid = qdict.sids[0].sid;
         }
         console.log("submit succeed.");
       } else {
@@ -159,7 +161,24 @@ export function main(denops: Denops): void {
       return {
         qdict: qdict.getQDict(),
         session: session.getSessionDict(),
+        sid: sid,
       };
+    },
+
+    async statusAfterSubmit(args: unknown): Promise<void> {
+      const session = new Session((args as StatusAfterSubmit).session);
+      const qdict = new Question((args as StatusAfterSubmit).qdict);
+      const isRefreshDdu = (args as StatusAfterSubmit).isRefreshDdu;
+      let judgeStatus =
+        (await getStatus(session, qdict, qdict.sids[0].sid))[0].status;
+      while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
+        if(isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+        await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+        judgeStatus =
+          (await getStatus(session, qdict, qdict.sids[0].sid))[0].status;
+      }
+      if(isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+      else console.log(judgeStatus);
     },
 
     async runTests(args: unknown): Promise<unknown> { // test automatically
@@ -172,7 +191,6 @@ export function main(denops: Denops): void {
         console.error(new TextDecoder().decode(buildResult.stderr));
         return results;
       }
-
       const question = new Question((args as RunTestArgs).qdict);
       if (question.ioExamples == undefined) {
         console.error("question not found ioExample");
@@ -269,34 +287,11 @@ export function main(denops: Denops): void {
 
     async getStatus(args: unknown): Promise<unknown> {
       const session: Session = new Session((args as StatusArgs).session);
-      const statuses: Array<StatusResult> = Array(0);
-      const qdict = (args as StatusArgs).qdict;
-
-      const url = qdict.url.split("/").slice(0, -2).join("/") +
-        "/submissions/me/status/json";
-      const req: Request = new Request(url, {
-        method: "GET",
-        headers: { cookie: session.cookieString },
-        redirect: "manual",
-        credentials: "include",
-      });
-      const response = await fetch(req);
-      session.updateCookieString(getSetCookies(response.headers));
-
-      const responseJson = await response.json();
-      for (const key in responseJson.Result) {
-        const resHTML = new DOMParser().parseFromString(
-          "<table>" + responseJson.Result[key].Html + "</table>",
-          "text/html",
+      let statuses: Array<StatusResult> = new Array(0);
+      for (const item of (args as StatusArgs).qdict) {
+        statuses = statuses.concat(
+          await getStatus(session, new Question(item)),
         );
-        const sid = qdict.sids.find((sid) => sid.sid == Number(key));
-        if (resHTML && qdict.title && sid) {
-          statuses.push({
-            title: qdict.title,
-            sid: sid,
-            status: resHTML.getElementsByTagName("td")[0].textContent,
-          });
-        }
       }
 
       return { session: session.getSessionDict(), statuses: statuses };
@@ -384,4 +379,44 @@ async function getLangId(
     }
   }
   return langid;
+}
+
+export async function getStatus(
+  session: Session,
+  qdict: Question,
+  sid?: number,
+) {
+  const statuses: Array<StatusResult> = Array(0);
+
+  let url = qdict.url.split("/").slice(0, -2).join("/") +
+    "/submissions/me/status/json";
+  if (sid != null) {
+    url += "?sids[]=" + sid;
+  }
+  const req: Request = new Request(url, {
+    method: "GET",
+    headers: { cookie: session.cookieString },
+    redirect: "manual",
+    credentials: "include",
+  });
+  const response = await fetch(req);
+  session.updateCookieString(getSetCookies(response.headers));
+
+  const responseJson = await response.json();
+  for (const key in responseJson.Result) {
+    const resHTML = new DOMParser().parseFromString(
+      "<table>" + responseJson.Result[key].Html + "</table>",
+      "text/html",
+    );
+    const sid = qdict.sids.find((sid) => sid.sid == Number(key));
+    if (resHTML && qdict.title && sid) {
+      statuses.push({
+        title: qdict.title,
+        sid: sid,
+        status: resHTML.getElementsByTagName("td")[0].textContent,
+      });
+    }
+  }
+
+  return statuses;
 }

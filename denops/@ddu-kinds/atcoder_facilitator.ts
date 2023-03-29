@@ -10,12 +10,12 @@ import {
 
 export interface ActionData {
   qdict: QDict;
-  rdict: RunTestResult;
+  rdicts: Array<RDict>;
 }
 
 type PreviewParams = {
   kind: string;
-  actionedData: Array<RunTestResult>;
+  rdicts: Array<RDict>;
 };
 
 type IOExample = {
@@ -34,7 +34,7 @@ type QDict = {
   ioexamples: Array<IOExample>;
 };
 
-type RunTestResult = {
+type RDict = {
   status: string;
   inputExample: string;
   outputExample: string;
@@ -48,37 +48,44 @@ interface ActionFlagParams {
 type Params = Record<never, never>;
 
 export class Kind extends BaseKind<Params> {
+  rdicts: Array<RDict> = [];
+
   override actions: Actions<Params> = {
-    async submit(
-      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
-    ) {
+    submit: async (
+      args: { denops: Denops; items: DduItem[]; actionParams: unknown},
+    ) => {
       for (const item of args.items) {
         const action = item.action as ActionData;
         await args.denops.call("atcoder_facilitator#submit", {
           qdict: action.qdict,
         });
       }
-      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
-    },
-    async runTests(
-      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
-    ) {
-      for (const item of args.items) {
-        const action = item.action as ActionData;
-        await args.denops.call("atcoder_facilitator#runTests", {
-          qdict: action.qdict,
-        });
+      if (
+        selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
+          ActionFlags.None
+      ) {
+        console.log(refineRDict(this.rdicts).join("\n"));
       }
       return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
     },
-    async getStatus(
+    runTests: async (
       args: { denops: Denops; items: DduItem[]; actionParams: unknown },
-    ) {
+    ) => {
+      let appendRDicts: Array<RDict> = [];
       for (const item of args.items) {
         const action = item.action as ActionData;
-        await args.denops.call("atcoder_facilitator#getStatus", {
-          qdict: action.qdict,
-        });
+        appendRDicts = appendRDicts.concat(
+          await args.denops.call("atcoder_facilitator#runTests", {
+            qdict: action.qdict,
+          }) as Array<RDict>,
+        );
+      }
+      this.rdicts = appendRDicts;
+      if (
+        selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
+          ActionFlags.None
+      ) {
+        console.log(refineRDict(this.rdicts).join("\n"));
       }
       return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
     },
@@ -108,13 +115,7 @@ export class Kind extends BaseKind<Params> {
       case "runTests":
         ret = {
           kind: "nofile",
-          contents: refineRunTestDict(params.actionedData),
-        };
-        break;
-      case "status":
-        ret = {
-          kind: "nofile",
-          contents: refineQDict(action.qdict),
+          contents: refineRDict(this.rdicts),
         };
         break;
       default:
@@ -155,14 +156,14 @@ function refineQDict(qdict: QDict): Array<string> {
   return ret;
 }
 
-function refineRunTestDict(rdict: Array<RunTestResult>): Array<string> {
+function refineRDict(rdicts: Array<RDict>): Array<string> {
   const ret: Array<string> = [];
-  for (let i = 0; i < rdict.length; i++) {
-    ret.push("Example " + (i+1)) 
-    ret.push(rdict[i].status);
-    ret.push(rdict[i].inputExample);
-    ret.push(rdict[i].outputExample);
-    ret.push(rdict[i].result);
+  for (let i = 0; i < rdicts.length; i++) {
+    ret.push("Example " + (i + 1));
+    ret.push(rdicts[i].status);
+    ret.push(rdicts[i].inputExample);
+    ret.push(rdicts[i].outputExample);
+    ret.push(rdicts[i].result);
   }
   return ret;
 }
