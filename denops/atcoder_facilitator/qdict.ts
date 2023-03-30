@@ -144,7 +144,7 @@ export class Question {
         constraint = parts[i].textContent.replace(
           new RegExp("\n*" + constraintReg),
           "",
-        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "");
+        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "").replace(/^\n*/g, "");
       } else if (
         parts[i].textContent.replace(/\n*/, "").indexOf(inputStyleReg) === 0 &&
         parts[i].textContent.replace(/\n*/, "").indexOf(inputExampleReg)

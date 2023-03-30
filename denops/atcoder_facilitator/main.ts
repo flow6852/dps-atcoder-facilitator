@@ -6,11 +6,11 @@ import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
-  StatusAfterSubmit,
   QuestionsArgs,
   RunDebugArgs,
   RunTestArgs,
   RunTestResult,
+  StatusAfterSubmit,
   StatusArgs,
   StatusResult,
   SubmitArgs,
@@ -172,12 +172,12 @@ export function main(denops: Denops): void {
       let judgeStatus =
         (await getStatus(session, qdict, qdict.sids[0].sid))[0].status;
       while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
-        if(isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+        if (isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
         await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
         judgeStatus =
           (await getStatus(session, qdict, qdict.sids[0].sid))[0].status;
       }
-      if(isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+      if (isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
       else console.log(judgeStatus);
     },
 
@@ -215,12 +215,20 @@ export function main(denops: Denops): void {
         await input.write(echoOutputExample.stdout);
         await input.close();
 
-        const output = await execResult.output();
+        const mainExec = execResult.output();
+        let flg = false;
+        const wait = new Promise(() =>
+          setTimeout(() => {
+            execResult.kill("SIGKILL");
+            flg = true;
+          }, 2 * 1000)
+        );
+        const output = await Promise.any([mainExec, wait]);
 
         if ((await execResult.status).success) {
           if (
             matchResultOutput(
-              new TextDecoder().decode(output.stdout),
+              new TextDecoder().decode((output as Deno.CommandOutput).stdout),
               ioExample.outputExample,
             )
           ) {
@@ -228,19 +236,32 @@ export function main(denops: Denops): void {
               status: "AC",
               inputExample: ioExample.inputExample,
               outputExample: ioExample.outputExample,
-              result: new TextDecoder().decode(output.stdout),
+              result: new TextDecoder().decode(
+                (output as Deno.CommandOutput).stdout,
+              ).replaceAll("^@", "\n"),
             });
           } else {
             results.push({
               status: "WA",
               inputExample: ioExample.inputExample,
               outputExample: ioExample.outputExample,
-              result: new TextDecoder().decode(output.stdout),
+              result: new TextDecoder().decode(
+                (output as Deno.CommandOutput).stdout,
+              ).replaceAll("^@", "\n"),
             });
           }
+        } else if (flg) {
+          results.push({
+            status: "TLE",
+            inputExample: ioExample.inputExample,
+            outputExample: ioExample.outputExample,
+            result: "",
+          });
         } else {
           console.error("exec error");
-          console.error(new TextDecoder().decode(output.stderr));
+          console.error(
+            new TextDecoder().decode((output as Deno.CommandOutput).stderr),
+          );
         }
       }
       return results;

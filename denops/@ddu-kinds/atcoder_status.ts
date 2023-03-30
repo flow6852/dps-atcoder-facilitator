@@ -108,7 +108,6 @@ function refineSDict(_qdict: QDict): Array<string> {
   return ret;
 }
 
-
 function selectFlag(flagStr: string): ActionFlags {
   let ret: ActionFlags = ActionFlags.None;
   switch (flagStr) {

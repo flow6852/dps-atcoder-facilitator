@@ -145,6 +145,12 @@ function refineQDict(qdict: QDict): Array<string> {
   ret.push("Problem");
   ret = ret.concat(qdict.problem.split("\n"));
 
+  // constraint 
+  if (qdict.constraint != undefined) {
+    ret.push("Constraint");
+    ret = ret.concat(qdict.constraint.split("\n"));
+  }
+
   // inputStyle
   ret.push("Input");
   ret = ret.concat(qdict.inputStyle.split("\n"));
@@ -157,13 +163,13 @@ function refineQDict(qdict: QDict): Array<string> {
 }
 
 function refineRDict(rdicts: Array<RDict>): Array<string> {
-  const ret: Array<string> = [];
+  let ret: Array<string> = [];
   for (let i = 0; i < rdicts.length; i++) {
     ret.push("Example " + (i + 1));
     ret.push(rdicts[i].status);
-    ret.push(rdicts[i].inputExample);
-    ret.push(rdicts[i].outputExample);
-    ret.push(rdicts[i].result);
+    ret = ret.concat(rdicts[i].inputExample.split("\n"));
+    ret = ret.concat(rdicts[i].outputExample.split("\n"));
+    ret = ret.concat(rdicts[i].result.split("\n"));
   }
   return ret;
 }
