@@ -99,7 +99,7 @@ export class Question {
     const row = doc.getElementsByClassName("row");
     // if (row == null) return;
 
-    const rowDoc = row[0];
+    const rowDoc = row[0].textContent.includes("問題文") ? row[0] : row[1];
     // // Time Limit / Memory Limit
     const timeMemoryLimit = rowDoc.getElementsByTagName("p")[0];
     // if (timeMemoryLimit == null) return;
@@ -120,7 +120,9 @@ export class Question {
     let inputExampleReg = "入力例";
     let outputExampleReg = "出力例";
 
-    if (lang == "en" && rowDoc.getElementsByClassName("lang-" + lang).length > 0) {
+    if (
+      lang == "en" && rowDoc.getElementsByClassName("lang-" + lang).length > 0
+    ) {
       problemReg = "Problem Statement";
       constraintReg = "Constraints";
       inputStyleReg = "Input";
@@ -131,57 +133,64 @@ export class Question {
 
     for (let i = 0; i < parts.length; i++) {
       if (
-        parts[i].textContent.replace(/\n*/, "").indexOf("注意") === 0 ||
-        parts[i].textContent.replace(/\n*/, "").indexOf(problemReg) === 0
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf("注意") === 0 ||
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(problemReg) === 0
       ) {
         problem = parts[i].textContent.replace(
-          new RegExp("\n*(" + problemReg + "|注意)\n*"),
+          new RegExp("[\n\s]*(" + problemReg + "|注意)[\n\s]*"),
           "",
-        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "");
+        ).replace(/\n+/g, "\n").replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
       } else if (
-        parts[i].textContent.replace(/\n*/, "").indexOf(constraintReg) === 0
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(constraintReg) === 0
       ) {
         constraint = parts[i].textContent.replace(
           new RegExp("\n*" + constraintReg),
           "",
-        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "").replace(/^\n*/g, "");
+        ).replace(/\n+/g, "\n").replace(/\s+/g, " ").replace(/[\n\s]*$/g, "")
+          .replace(/^\n*/g, "");
       } else if (
-        parts[i].textContent.replace(/\n*/, "").indexOf(inputStyleReg) === 0 &&
-        parts[i].textContent.replace(/\n*/, "").indexOf(inputExampleReg)
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(inputStyleReg) ===
+          0 &&
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(inputExampleReg)
       ) {
         inputStyle = parts[i].textContent.replace(
           new RegExp("\n*" + inputStyleReg),
           "",
-        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "");
+        ).replace(/\n+/g, "\n").replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
       } else if (
-        parts[i].textContent.replace(/\n*/, "").indexOf(outputStyleReg) === 0 &&
-        parts[i].textContent.replace(/\n*/, "").indexOf(outputExampleReg)
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(outputStyleReg) ===
+          0 &&
+        parts[i].textContent.replace(/[\n\s]*/, "").indexOf(outputExampleReg)
       ) {
         outputStyle = parts[i].textContent.replace(
           new RegExp("\n*" + outputStyleReg),
           "",
-        ).replace(/\n+/g, "\n").replace(/\t+/g, "\t").replace(/\n*$/g, "");
+        ).replace(/\n+/g, "\n").replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
       } else if (
         parts[i].getElementsByTagName("h3") != null &&
-        parts[i].getElementsByTagName("h3")[0].textContent.indexOf(inputExampleReg) === 0
+        parts[i].getElementsByTagName("h3")[0].textContent.indexOf(
+            inputExampleReg,
+          ) === 0
       ) {
-        const inputExample: string = parts[i++].getElementsByTagName("pre")[0].textContent
+        const inputExample: string = parts[i++].getElementsByTagName("pre")[0]
+          .textContent
           .replace(
             /\n+/g,
             "\n",
-          ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
-        const outputExample: string = parts[i].getElementsByTagName("pre")[0].textContent
+          ).replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
+        const outputExample: string = parts[i].getElementsByTagName("pre")[0]
+          .textContent
           .replace(
             /\n+/g,
             "\n",
-          ).replace(/\t+/g, "\t").replace(/\n*$/g, "");
+          ).replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
         let comment: string | undefined = undefined;
         if (parts[i].querySelector("p") != null) {
           comment = parts[i].getElementsByTagName("p")[0].textContent.replace(
             /\n+/g,
             "\n",
           )
-            .replace(/\t+/g, "\t").replace(/\n*$/g, "");
+            .replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
         }
         ioExamples.push({
           inputExample: inputExample,
@@ -199,42 +208,42 @@ export class Question {
       for (let i = 0; i < statements.length; i++) {
         if (statements[i].textContent.indexOf("問題文") === 0) {
           problem = statements[++i].textContent.replace(/\n+/g, "\n").replace(
-            /\t+/g,
-            "\t",
-          ).replace(/\n*$/g, "");
+            /\s+/g,
+            " ",
+          ).replace(/[\n\s]*$/g, "");
         } else if (statements[i].textContent.indexOf("制約") === 0) {
           constraint = statements[++i].textContent.replace(/\n+/g, "\n")
             .replace(
-              /\t+/g,
-              "\t",
-            ).replace(/\n*$/g, "");
+              /\s+/g,
+              " ",
+            ).replace(/[\n\s]*$/g, "");
         } else if (
           statements[i].textContent.indexOf("入力") === 0 &&
           statements[i].textContent.indexOf("入力例")
         ) {
           inputStyle = statements[++i].textContent.replace(/\n+/g, "\n")
             .replace(
-              /\t+/g,
-              "\t",
-            ).replace(/\n*$/g, "");
+              /\s+/g,
+              " ",
+            ).replace(/[\n\s]*$/g, "");
         } else if (
           statements[i].textContent.indexOf("出力") === 0 &&
           statements[i].textContent.indexOf("出力例")
         ) {
           outputStyle = statements[++i].textContent.replace(/\n+/g, "\n")
             .replace(
-              /\t+/g,
-              "\t",
-            ).replace(/\n*$/g, "");
+              /\s+/g,
+              " ",
+            ).replace(/[\n\s]*$/g, "");
         } else if (statements[i].textContent.indexOf("入力例") === 0) {
           const inputExample = statements[++i].textContent.replace(/\n+/g, "\n")
-            .replace(/\t+/g, "\t").replace(/\n*$/g, "");
+            .replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
           i++;
           const outputExample = statements[++i].textContent.replace(
             /\n+/g,
             "\n",
           )
-            .replace(/\t+/g, "\t").replace(/\n*$/g, "");
+            .replace(/\s+/g, " ").replace(/[\n\s]*$/g, "");
           i++;
           let comment = "";
           while (
@@ -242,9 +251,9 @@ export class Question {
           ) {
             comment = comment + "\n" +
               statements[i++].textContent.replace(/\n+/g, "\n").replace(
-                /\t+/g,
-                "\t",
-              ).replace(/\n*$/g, "");
+                /\s+/g,
+                " ",
+              ).replace(/[\n\s]*$/g, "");
           }
           ioExamples.push({
             inputExample: inputExample,
@@ -273,9 +282,18 @@ export class Question {
     this.ioExamples = ioExamples;
   }
 
-  public appendSid(body: HTMLDocument, date: string): void{
-    const tds = body.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0].getElementsByTagName("td")
-    const sid = tds[tds.length - 1].getElementsByTagName("a")[0].getAttribute("href");
-    if (sid != null) this.sids.unshift({sid: Number(sid.split("/")[sid.split("/").length-1]), date: date});
+  public appendSid(body: HTMLDocument, date: string): void {
+    const tds = body.getElementsByTagName("tbody")[0].getElementsByTagName(
+      "tr",
+    )[0].getElementsByTagName("td");
+    const sid = tds[tds.length - 1].getElementsByTagName("a")[0].getAttribute(
+      "href",
+    );
+    if (sid != null) {
+      this.sids.unshift({
+        sid: Number(sid.split("/")[sid.split("/").length - 1]),
+        date: date,
+      });
+    }
   }
 }
