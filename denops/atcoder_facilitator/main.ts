@@ -219,8 +219,12 @@ export function main(denops: Denops): void {
         let flg = false;
         const wait = new Promise(() =>
           setTimeout(() => {
-            execResult.kill("SIGKILL");
-            flg = true;
+            try {
+              execResult.kill();
+              flg = true;
+            } catch {
+              flg = false;
+            }
           }, 2 * 1000)
         );
         const output = await Promise.any([mainExec, wait]);
@@ -238,7 +242,7 @@ export function main(denops: Denops): void {
               outputExample: ioExample.outputExample,
               result: new TextDecoder().decode(
                 (output as Deno.CommandOutput).stdout,
-              ).replaceAll("^@", "\n"),
+              ),
             });
           } else {
             results.push({
@@ -247,7 +251,7 @@ export function main(denops: Denops): void {
               outputExample: ioExample.outputExample,
               result: new TextDecoder().decode(
                 (output as Deno.CommandOutput).stdout,
-              ).replaceAll("^@", "\n"),
+              ),
             });
           }
         } else if (flg) {
@@ -322,13 +326,13 @@ export function main(denops: Denops): void {
 
 function matchResultOutput(result: string, output: string): boolean {
   let ret = true;
-  const resultSplit = result.split("\n");
-  const outputSplit = output.split("\n");
+  const resultSplit = result.replace(/[\s\n]*$/g, "").split("\n");
+  const outputSplit = output.replace(/[\s\n]*$/g, "").split("\n");
   if (resultSplit.length != outputSplit.length) {
     ret = false;
   } else {
     for (let i = 0; i < resultSplit.length; i++) {
-      if (resultSplit[i].indexOf(outputSplit[i])) {
+      if (resultSplit[i] != outputSplit[i]) {
         ret = false;
       }
     }
