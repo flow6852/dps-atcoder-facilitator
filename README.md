@@ -1,6 +1,6 @@
-# dps-atcoder_facilitator 
+# dps-atcoder-facilitator
 
-Facilitator for AtCoder on Vim/Neovim 
+Facilitator for AtCoder on Vim/Neovim inspired by https://github.com/ka-tsu-mo/at-vim-coder
 
 # Required
 
