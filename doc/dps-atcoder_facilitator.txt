@@ -1,0 +1,267 @@
+*dps-atcoder_facilitator.txt*	Facilitator for AtCoder
+
+Author: flow6852
+License: MIT license
+
+CONTENTS			*dps-atcoder_facilitator-contents*
+
+Introduction 			|dps-atcoder_facilitator-introduction|
+Install 			|dps-atcoder_facilitator-install|
+Examples 			|dps-atcoder_facilitator-examples|
+Commands 			|dps-atcoder_facilitator-commands|
+Variables 			|dps-atcoder_facilitator-variables|
+Functions 			|dps-atcoder_facilitator-functions||
+
+==============================================================================
+
+INTRODUCTION 				*dps-atcoder-_facilitator-intriduction*
+
+This plugin facilitates following action for AtCoder on Vim/Neovim
+
+* auto collect questions
+* auto submit
+* auto run tests 
+* check status 
+
+==============================================================================
+
+INSTALL 				*dps-atcoder-facilitator-install*
+
+Please install "denops.vim" and 
+optionally install "ddu.vim".
+
+https://github.com/vim-denops/denops.vim
+https://github.com/Shougo/ddu.vim
+
+==============================================================================
+
+EXAMPLES 				*dps-atcoder-facilitator-examples*
+>
+	" ddu.vim keymapping
+	augroup DduKeyMap
+	  au!
+	  autocmd FileType ddu-ff call s:ddu_my_settings()
+	augroup End
+	
+	function! s:ddu_my_settings() abort
+	  " submit
+	  nnoremap <buffer><silent> s
+	    \ <Cmd>call StatusAfterSubmit(v:true)<CR>
+	
+	  nnoremap <buffer><silent> t
+	    \ <Cmd>call ddu#ui#multi_actions([
+		\ ['itemAction',
+		    \ {'name': 'runTests',
+		    \ 'params': {'actionFlag': 'Persist'}}],
+		\  ['preview', {'kind': 'runTests'}]])<CR>
+	endfunction
+	
+	function! StatusAfterSubmit(arg) abort
+	    call ddu#ui#multi_actions([
+		\ ['getItem'],
+		\ ['itemAction',
+		    \ {'name': 'submit',
+		    \ 'params': {'actionFlag': 'Persist'}}]])
+	    if a:arg
+	        call ddu#start({
+		    \ 'name': 'atcoder_facilitator',
+		    \ 'sources': [
+			\ {'name': 'atcoder_status',
+			\ 'options':{
+			\ 'matchers': ['matcher_substring']},
+			\ 'params': {
+			    \ 'qdict': g:atcoder_facilitator#qdict,
+			    \ 'session': g:atcoder_facilitator#session}}]})
+	    endif
+	    call atcoder_facilitator#statusAfterSubmit(
+	        \ atcoder_facilitator#matchQDict(
+		    \ get(get(b:ddu_ui_item, "action"), "qdict")),
+		    \ a:arg)
+	endfunction
+	
+	" 
+	
+	let cfg = {
+	    \   'ui': 'ff',
+	    \   'sourceOptions': {
+	    \     '_': {
+	    \       'matchers': ['matcher_substring'],
+	    \     },
+	    \   },
+	    \   'uiParams' : {
+	    \     'ff': {
+	    \       'split': has('nvim') ? 'floating' : 'horizontal',
+	    \       'startFilter': v:false,
+	    \       'highlights': {'selected': 'Statement'},
+	    \       'autoAction': {'name':'preview'},
+	    \       'winCol': &columns/8 ,
+	    \       'winWidth': has('nvim') ? 3*&columns/4 : 15,
+	    \       'winRow': &lines/8,
+	    \       'winHeight': 10 ,
+	    \       'previewFloating': has('nvim') ? v:true : v:false,
+	    \       'previewSplit': has('nvim') ? 'horizontal' : 'no',
+	    \       'previewWidth': has('nvim') ? 3*&columns/8: 10,
+	    \       'previewHeight': has('nvim') ? 3*&lines/4 - 10 : 10,
+	    \       'splitDirection': "topleft"
+	    \     }
+	    \  },
+	    \   'kindOptions': {
+	    \     '_': {
+	    \       'defaultAction': 'open',
+	    \     },
+	    \   }
+	    \ }
+	
+	call ddu#custom#patch_local('atcoder_facilitator', cfg)
+	call ddu#custom#patch_local('atcoder_status', cfg)
+	
+	nmap <silent> ;a <Cmd> call ddu#start({
+	    \ 'name': 'atcoder_facilitator',
+	    \ 'sources': [{
+		\ 'name': 'atcoder_facilitator',
+		\ 'options':{
+		    \ 'matchers': ['matcher_substring']},
+		    \ 'params': {'qdict': g:atcoder_facilitator#qdict}}]})<CR>
+	nmap <silent> ;s <Cmd> call ddu#start({
+	    \ 'name': 'atcoder_status',
+	    \ 'sources': [{
+		\ 'name': 'atcoder_status',
+		\ 'options':{
+		    \ 'matchers': ['matcher_substring']},
+		    \ 'params': {
+			\ 'qdict': g:atcoder_facilitator#qdict,
+			\ 'session': g:atcoder_facilitator#session}}]})<CR>
+
+==============================================================================
+COMMANDS 			*dps-atcpder_facilitator-commands*
+
+				*AFLogin*
+AFLogin
+
+	    Login and save `g:atcoder_facilitator#session` session
+
+				*AFQGets*
+AFQGets a b ... 
+
+	    Get a,b,... and save `g:atcoder_facilitator#session` session
+
+
+AFCGets a b ,,, 		*AFCGets*
+
+	    Get questions in a,b,... and save `g:atcoder_facilitator#session` session
+
+AFTests a 			*AFTests*
+
+	    Test current buffer is AC about questions in a,b,...
+
+AFStatus a 			*AFStatus*
+
+	    Show status  about questions in a
+
+AFDebug a 			*AFDebug*
+
+	    Test current buffer with user-defined input
+
+AFSubmit a 			*AFSubmit*
+
+	    Test current buffer is AC about questions in a,b,... and save `g:atcoder_facilitator#session` session
+
+==============================================================================
+VARIABLES 			*dps-atcoder_facilitator-variables*
+
+				*g:atcoder_facilitator#session*
+g:atcoder_facilitator#session   
+
+	    Session 
+	    Default: `{cookieString': "", 'csrf_token': ""}`
+
+				*g:atcoder_facilitator#lang*
+g:atcoder_facilitator#lang 
+
+	    Languagae
+	    Default: `'ja'`
+
+				*g:atcoder_facilitator#progLang*
+g:atcoder_facilitator#progLang
+
+	    Language Selector
+	    Default: `'Java (OpenJDK 11.0.6)'`
+
+				*g:atcoder_facilitator#qdict*
+g:atcoder_facilitator#qdict
+
+	    Question List for  AFQGets or AFCGets 
+	    Default: `[]`
+
+				*g:atcoder_facilitator#buildCmd*
+g:atcoder_facilitator#buildCmd 
+
+	    Build Command for AFTests or AFDebug
+	    Default: `['javac', expand('%')]`
+
+				*g:atcoder_facilitator#execCmd*
+g:atcoder_facilitator#execCmd
+
+	    Exec Command for `AFTests` or `AFDebug`
+	    Default: `['java', expand('%:r')]`
+
+
+
+==============================================================================
+FUNCTIONS 			*dps-atcoder_facilitator-functions*
+
+				*atcoder_facilitator#login*
+atcoder_facilitator#login()
+
+	    Login
+	    Args: ()
+
+				*atcoder_facilitator#qgets*
+atcoder_facilitator#qgets(questions)
+
+	    Get Questions 
+	    Args: questions: [string]
+
+				*atcoder_facilitator#cgets*
+atcoder_facilitator#cgets(contests)
+   
+	    Get Questions from Contests 
+	    Args: contests: [string]
+
+				*atcoder_facilitator#submit*
+atcoder_facilitator#submit(question: string)
+
+	    Submit current buffer 
+	    Args: (question: string)
+
+				*atcoder_facilitator#runTests*
+atcoder_facilitator#runTests(question: string)
+
+	    Exec Command and check examples 
+	    `(question: string)`
+
+				*atcoder_facilitator#runDebug*
+atcoder_facilitator#runDebug()
+
+	    Exec Command with user-defined input
+
+				*atcoder_facilitator#getStatus*
+atcoder_facilitator#getStatus(qdict)
+    
+	    Get status one time
+	    Args: (qdict: [qdict])
+
+				*atcoder_facilitator#statusAfterSubmit*
+atcoder_facilitator#statusAfterSubmit(qdict, isRefreshDdu)
+    
+	    Get status until judged
+	    Args: (qdict: [dict], isRefreshDdu: boolean)
+
+				*g:atcoder_facilitator#qdict*
+atcoder_facilitator#matchQDict(qdict)
+
+	    return item in *g:atcoder_facilitator#qdict* matched arg
+	    Args: (qdict: qdict)
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:noet:fen:noet:

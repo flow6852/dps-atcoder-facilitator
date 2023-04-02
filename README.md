@@ -20,8 +20,6 @@ https://github.com/Shougo/ddu-ui-ff
 
 # Demo
 
-# Example
-
 https://user-images.githubusercontent.com/42508708/229091089-3ef4f013-1117-466b-ac4f-44fb13de3db0.mp4
 
 # Example Setting on Demo
