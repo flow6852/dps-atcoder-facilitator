@@ -139,32 +139,42 @@ COMMANDS 			*dps-atcpder_facilitator-commands*
 AFLogin
 
 	    Login and save `g:atcoder_facilitator#session` session
+	    Args: 
 
 				*AFQGets*
 AFQGets a b ... 
 
-	    Get a,b,... and save `g:atcoder_facilitator#session` session
-
+	    Get question a and question b,... and
+	    save `g:atcoder_facilitator#session` session
+	    Example; AFQGets arc001_1 abc234_a
 
 AFCGets a b ,,, 		*AFCGets*
 
-	    Get questions in a,b,... and save `g:atcoder_facilitator#session` session
+	    Get questions in contest a and contest b,... and 
+	    save `g:atcoder_facilitator#session` session
+	    Example: AFCGets arc001 abc234
 
 AFTests a 			*AFTests*
 
 	    Test current buffer is AC about questions in a,b,...
+	    Example: AFTest arc001_1
 
 AFStatus a 			*AFStatus*
 
-	    Show status  about questions in a
+	    Show status about questions in a
+	    Example: AFStatus arc001_1
 
-AFDebug a 			*AFDebug*
+AFDebug				*AFDebug*
 
 	    Test current buffer with user-defined input
+	    Example: AFDebug
 
 AFSubmit a 			*AFSubmit*
 
-	    Test current buffer is AC about questions in a,b,... and save `g:atcoder_facilitator#session` session
+	    Test current buffer is AC 
+	    about questions in a,b,... 
+	    and save `g:atcoder_facilitator#session` session
+	    Example: AFSubmit arc001_1
 
 ==============================================================================
 VARIABLES 			*dps-atcoder_facilitator-variables*
