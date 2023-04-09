@@ -37,8 +37,11 @@ export function main(denops: Denops): void {
     },
 
     async getQuestions(args: unknown): Promise<void> {
+      const sess = await vars.globals.get(denops, "atcoder_facilitator#session") as SessionDict
+      if (sess == undefined) return
+
       const qdict = new Array(0);
-      const session = new Session((args as QuestionsArgs).session);
+      const session = new Session(sess);
       for (const qname of (args as QuestionsArgs).qnames) {
         const question = new Question(
           ATCODER_URL + "/contests/" + qname.split("_")[0] + "/tasks/" + qname,
@@ -63,7 +66,10 @@ export function main(denops: Denops): void {
     },
 
     async getContests(args: unknown): Promise<void> {
-      const session = new Session((args as ContestsArgs).session);
+      const sess = await vars.globals.get(denops, "atcoder_facilitator#session") as SessionDict
+      if (sess == undefined) return
+
+      const session = new Session(sess);
       const qdict = new Array(0);
       for (const cname of (args as ContestsArgs).cnames) {
         await getContestsURLs(denops, cname, session);
@@ -286,8 +292,7 @@ async function submit (denops: Denops, session: Session, qds: Array<QDict>, qnam
         progLang + ")",
     );
   }
-  console.log(qdict.getQDict())
-  await vars.globals.set(denops, "atcoder_facilitator#qdict[" + i + ":", qdict.getQDict())
+  await vars.globals.set(denops, "atcoder_facilitator#qdict[" + i + "]", qdict.getQDict())
   await vars.globals.set(denops, "atcoder_facilitator#session", session.getSessionDict());
   return sid 
 }
