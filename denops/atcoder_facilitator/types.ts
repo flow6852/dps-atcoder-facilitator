@@ -19,10 +19,9 @@ export type ContestsArgs = {
 };
 
 export type SubmitArgs = {
-  qdict: QDict;
-  progLang: string;
+  qname?: string;
+  qdict?: QDict;
   file: string;
-  session: SessionDict;
 };
 
 export type RunTestArgs = {
@@ -67,7 +66,6 @@ export type StatusResult = {
 }
 
 export type StatusAfterSubmit = {
-  session: SessionDict,
   qdict: QDict,
   isRefreshDdu: boolean,
 }

@@ -8,10 +8,9 @@ import { QDict } from "../atcoder_facilitator/qdict.ts";
 import { Session, SessionDict } from "../atcoder_facilitator/session.ts";
 import { getStatus } from "../atcoder_facilitator/main.ts";
 import { Question } from "../atcoder_facilitator/qdict.ts";
+import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 
 type Params = {
-  qdict: Array<QDict>;
-  session: SessionDict;
 };
 
 export class Source extends BaseSource<Params> {
@@ -24,13 +23,14 @@ export class Source extends BaseSource<Params> {
     return new ReadableStream<Item[]>({
       async start(controller) {
         const items: Item[] = [];
-        for (const item of args.sourceParams.qdict) {
+        for (const item of await vars.globals.get(args.denops, "atcoder_facilitator#qdict") as Array<QDict>) {
           for (const sid of item.sids) {
             items.push({
               word: sid.date + "|" + item.title + "|" + sid.sid +
                 "|" +
                 (await getStatus(
-                  new Session(args.sourceParams.session),
+                  args.denops,
+                  new Session(await vars.globals.get(args.denops, "atcoder_facilitator#session") as SessionDict),
                   new Question(item),
                   sid.sid,
                 ))[0].status,
@@ -48,8 +48,6 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
-      qdict: [],
-      session: new Session().getSessionDict(),
     };
   }
 }

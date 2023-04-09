@@ -2,6 +2,8 @@ import {
   Cookie,
   getSetCookies,
 } from "https://deno.land/std@0.179.0/http/cookie.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 
 export type SessionDict = {
   kind: "SessionDict";
@@ -29,8 +31,9 @@ export class Session {
     }
   }
 
-  public updateCookieString(cookies: Array<Cookie>): void{
+  public async updateSession(denops: Denops, cookies: Array<Cookie>): Promise<void>{
     this.cookieString = mergeCookieString(cookies)
+    await vars.globals.set(denops, "atcoder_facilitator#session", this.getSessionDict());
   }
 
   public async login(

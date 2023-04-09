@@ -1,5 +1,6 @@
 import { IOExample, Sid } from "./types.ts";
 import { Session } from "./session.ts";
+import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import {
   DOMParser,
   HTMLDocument,
@@ -73,6 +74,7 @@ export class Question {
   }
 
   async fetchQuestion(
+    denops: Denops,
     lang: string,
     session: Session,
   ): Promise<void> {
@@ -82,7 +84,7 @@ export class Question {
     });
 
     const cookies = getSetCookies(response.headers);
-    session.updateCookieString(cookies);
+    session.updateSession(denops, cookies);
 
     const resText = new DOMParser().parseFromString(
       await response.text(),

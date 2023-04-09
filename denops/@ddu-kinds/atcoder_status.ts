@@ -7,6 +7,7 @@ import {
   PreviewContext,
   Previewer,
 } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
+import {QDict} from "../atcoder_facilitator/qdict.ts"
 
 export interface ActionData {
   qdict: QDict;
@@ -15,22 +16,6 @@ export interface ActionData {
 type PreviewParams = {
   kind: string;
   sdicts: Array<SDict>;
-};
-
-type IOExample = {
-  inputExample: string;
-  outputExmaple: string;
-  comments: string;
-};
-
-type QDict = {
-  timeMemoryLimit: string;
-  title: string;
-  problem: string;
-  constraint: string;
-  inputStyle: string;
-  outputStyle: string;
-  ioexamples: Array<IOExample>;
 };
 
 type SDict = {

@@ -7,6 +7,7 @@ import {
   PreviewContext,
   Previewer,
 } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
+import {QDict} from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {
   qdict: QDict;
@@ -16,22 +17,6 @@ export interface ActionData {
 type PreviewParams = {
   kind: string;
   rdicts: Array<RDict>;
-};
-
-type IOExample = {
-  inputExample: string;
-  outputExmaple: string;
-  comments: string;
-};
-
-type QDict = {
-  timeMemoryLimit: string;
-  title: string;
-  problem: string;
-  constraint: string;
-  inputStyle: string;
-  outputStyle: string;
-  ioexamples: Array<IOExample>;
 };
 
 type RDict = {
@@ -136,14 +121,14 @@ function refineQDict(qdict: QDict): Array<string> {
   let ret: Array<string> = [];
   // title
   ret.push("Title");
-  ret.push(qdict.title);
+  ret.push(qdict.title ?? "");
 
   // timeMemoryLimit
-  ret.push(qdict.timeMemoryLimit);
+  ret.push(qdict.timeMemoryLimit ?? "");
 
   // problem
   ret.push("Problem");
-  ret = ret.concat(qdict.problem.split("\n"));
+  ret = ret.concat((qdict.problem ?? "").split("\n"));
 
   // constraint 
   if (qdict.constraint != undefined) {
@@ -153,11 +138,11 @@ function refineQDict(qdict: QDict): Array<string> {
 
   // inputStyle
   ret.push("Input");
-  ret = ret.concat(qdict.inputStyle.split("\n"));
+  ret = ret.concat((qdict.inputStyle ?? "").split("\n"));
 
   // outputStyle
   ret.push("Output");
-  ret = ret.concat(qdict.outputStyle.split("\n"));
+  ret = ret.concat((qdict.outputStyle ?? "").split("\n"));
 
   return ret;
 }
