@@ -37,35 +37,37 @@ export function main(denops: Denops): void {
     },
 
     async getQuestions(args: unknown): Promise<void> {
+      const beforeQDict = await vars.globals.get(denops, "atcoder_facilitator#qdict") as Array<QDict>
       const sess = await vars.globals.get(denops, "atcoder_facilitator#session") as SessionDict
       if (sess == undefined) return
 
       const qdict = new Array(0);
       const session = new Session(sess);
-      for (const qname of (args as QuestionsArgs).qnames) {
-        const question = new Question(
-          ATCODER_URL + "/contests/" + qname.split("_")[0] + "/tasks/" + qname,
-        );
-        await question.fetchQuestion(
-          denops,
-          (args as QuestionsArgs).lang,
-          session,
-        );
-        if (question.getQDict() == undefined) {
-          console.error(
-            "can't get from " + ATCODER_URL + "/contests/" +
-              qname.split("_")[0] + "/tasks/" + qname,
+      for (const qname of (args as QuestionsArgs).qnames) { 
+        const url = ATCODER_URL + "/contests/" + qname.split("_")[0] + "/tasks/" + qname
+        const question = new Question(url);
+        if (beforeQDict.reduce(((flg, qdict) => flg && qdict.url != url), true)){
+          await question.fetchQuestion(
+            denops,
+            (args as QuestionsArgs).lang,
+            session,
           );
-        } else {
-          qdict.push(question.getQDict());
+          if (question.getQDict() == undefined) {
+            console.error(
+              "can't get from " + ATCODER_URL + "/contests/" +
+                qname.split("_")[0] + "/tasks/" + qname,
+            );
+          } else {
+            qdict.push(question.getQDict());
+          }
         }
       }
-      const beforeQDict = await vars.globals.get(denops, "atcoder_facilitator#qdict") as Array<QDict>
       await vars.globals.set(denops, "atcoder_facilitator#qdict", beforeQDict.concat(qdict));
       await vars.globals.set(denops, "atcoder_facilitator#session", session.getSessionDict());
     },
 
     async getContests(args: unknown): Promise<void> {
+      const beforeQDict = await vars.globals.get(denops, "atcoder_facilitator#qdict") as Array<QDict>
       const sess = await vars.globals.get(denops, "atcoder_facilitator#session") as SessionDict
       if (sess == undefined) return
 
@@ -75,22 +77,23 @@ export function main(denops: Denops): void {
         await getContestsURLs(denops, cname, session);
         const urls = await getContestsURLs(denops, cname, session);
         for (const url of urls) {
-          const question = new Question(url);
-          await question.fetchQuestion(
-          denops,
-            (args as QuestionsArgs).lang,
-            session,
-          );
-          if (question.getQDict() == undefined) {
-            console.error(
-              "can't get from " + url,
+          if (beforeQDict.reduce(((flg, qdict) => flg && qdict.url != url), true)){
+            const question = new Question(url);
+            await question.fetchQuestion(
+            denops,
+              (args as QuestionsArgs).lang,
+              session,
             );
-          } else {
-            qdict.push(question.getQDict());
+            if (question.getQDict() == undefined) {
+              console.error(
+                "can't get from " + url,
+              );
+            } else {
+              qdict.push(question.getQDict());
+            }
           }
         }
       }
-      const beforeQDict = await vars.globals.get(denops, "atcoder_facilitator#qdict") as Array<QDict>
       await vars.globals.set(denops, "atcoder_facilitator#qdict", beforeQDict.concat(qdict));
       await vars.globals.set(denops, "atcoder_facilitator#session", session.getSessionDict());
     },
@@ -336,8 +339,7 @@ async function getContestsURLs(
   if (trs == null) {
     console.error("parse error");
   } else {
-    for (const tr of trs.getElementsByTagName("tr")) {
-      if (tr.getElementsByTagName("a").length < 1) continue;
+    for (const tr of trs.getElementsByTagName("tr")) { if (tr.getElementsByTagName("a").length < 1) continue;
       else {urls.push(
           ATCODER_URL + tr.getElementsByTagName("a")[0].getAttribute("href"),
         );}
