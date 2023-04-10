@@ -43,10 +43,10 @@ endfunction
 function! StatusAfterSubmit(arg) abort
     call ddu#ui#multi_actions([['getItem'], ['itemAction', {'name': 'submit', 'params': {'actionFlag': 'Persist'}}]])
     if a:arg
-        call ddu#start({'name': 'atcoder_facilitator', 'sources': [{'name': 'atcoder_status', 'options':{'matchers': ['matcher_substring']}, 'params': {'qdict': g:atcoder_facilitator#qdict, 'session': g:atcoder_facilitator#session}}]})
-        call atcoder_facilitator#statusAfterSubmit(atcoder_facilitator#matchQDict(get(get(b:ddu_ui_item, "action"), "qdict")), a:arg)
+        call ddu#start({'name': 'atcoder_facilitator', 'sources': [{'name': 'atcoder_status', 'options':{'matchers': ['matcher_substring']}}]})
+        call atcoder_facilitator#statusAfterSubmit(get(get(b:ddu_ui_item, "action"), "qdict"), a:arg)
     else
-        call atcoder_facilitator#statusAfterSubmit(atcoder_facilitator#matchQDict(get(get(b:ddu_ui_item, "action"), "qdict")), a:arg)
+        call atcoder_facilitator#statusAfterSubmit(get(get(b:ddu_ui_item, "action"), "qdict"), a:arg)
     endif
 endfunction
 
@@ -86,8 +86,8 @@ let cfg = {
 call ddu#custom#patch_local('atcoder_facilitator', cfg)
 call ddu#custom#patch_local('atcoder_status', cfg)
 
-nmap <silent> ;a <Cmd> call ddu#start({'name': 'atcoder_facilitator', 'sources': [{'name': 'atcoder_facilitator', 'options':{'matchers': ['matcher_substring']}, 'params': {'qdict': g:atcoder_facilitator#qdict}}]})<CR>
-nmap <silent> ;s <Cmd> call ddu#start({'name': 'atcoder_status', 'sources': [{'name': 'atcoder_status', 'options':{'matchers': ['matcher_substring']}, 'params': {'qdict': g:atcoder_facilitator#qdict, 'session': g:atcoder_facilitator#session}}]})<CR>
+nmap <silent> ;a <Cmd> call ddu#start({'name': 'atcoder_facilitator', 'sources': [{'name': 'atcoder_facilitator', 'options':{'matchers': ['matcher_substring']}}]})<CR>
+nmap <silent> ;s <Cmd> call ddu#start({'name': 'atcoder_status', 'sources': [{'name': 'atcoder_status', 'options':{'matchers': ['matcher_substring']}}]})<CR>
 ```
 
 # Commands

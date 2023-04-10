@@ -248,7 +248,7 @@ atcoder_facilitator#submit(question: string)
 atcoder_facilitator#runTests(question: string)
 
 	    Exec Command and check examples 
-	    `(question: string)`
+	    Args: (question: string)
 
 				*atcoder_facilitator#runDebug*
 atcoder_facilitator#runDebug()
