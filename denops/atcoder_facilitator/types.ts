@@ -1,5 +1,5 @@
-import { QDict } from "./qdict.ts"
-import { SessionDict } from "./session.ts"
+import { QDict } from "./qdict.ts";
+import { SessionDict } from "./session.ts";
 
 export type LoginArgs = {
   username: string;
@@ -45,27 +45,27 @@ export type IOExample = {
 export type Sid = {
   date: string;
   sid: number;
-}
+};
 
 export type StatusArgs = {
-  qdict: Array<QDict>,
-  session: SessionDict,
-}
+  qdict: Array<QDict>;
+  session: SessionDict;
+};
 
 export type RunTestResult = {
-  status: string
-  inputExample: string,
-  outputExample: string,
-  result: string,
-}
+  status: string;
+  inputExample: string;
+  outputExample: string;
+  result: string;
+};
 
 export type StatusResult = {
   title: string;
   sid: Sid;
   status: string;
-}
+};
 
 export type StatusAfterSubmit = {
-  qdict: QDict,
-  isRefreshDdu: boolean,
-}
+  qdict: QDict;
+  isRefreshDdu: boolean;
+};

@@ -1,13 +1,13 @@
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import type { Actions } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
+import type { Actions } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
 import {
   ActionFlags,
   BaseKind,
   DduItem,
   PreviewContext,
   Previewer,
-} from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
-import {QDict} from "../atcoder_facilitator/qdict.ts"
+} from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
+import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {
   qdict: QDict;
@@ -40,7 +40,7 @@ export class Kind extends BaseKind<Params> {
     getStatus: async (
       args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) => {
-      let ret: Array<SDict> = new Array(0)
+      let ret: Array<SDict> = new Array(0);
       for (const item of args.items) {
         const action = item.action as ActionData;
         ret = ret.concat(
@@ -52,7 +52,7 @@ export class Kind extends BaseKind<Params> {
           selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
             ActionFlags.None
         ) {
-          console.log(refineSDict(action.qdict).join("\n"))
+          console.log(refineSDict(action.qdict).join("\n"));
         }
       }
       return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
@@ -111,4 +111,3 @@ function selectFlag(flagStr: string): ActionFlags {
   }
   return ret;
 }
-

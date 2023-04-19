@@ -1,7 +1,7 @@
 import {
   Cookie,
   getSetCookies,
-} from "https://deno.land/std@0.179.0/http/cookie.ts";
+} from "https://deno.land/std@0.184.0/http/cookie.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 
@@ -16,24 +16,34 @@ export class Session {
   cookieString = "";
   LOGIN_URL = "https://atcoder.jp/login";
 
-  constructor(sessionDict?: SessionDict){
-    if (sessionDict != undefined && sessionDict.csrf_token != undefined && sessionDict.cookieString != undefined) {
+  constructor(sessionDict?: SessionDict) {
+    if (
+      sessionDict != undefined && sessionDict.csrf_token != undefined &&
+      sessionDict.cookieString != undefined
+    ) {
       this.csrf_token = sessionDict.csrf_token;
       this.cookieString = sessionDict.cookieString;
     }
   }
 
   public getSessionDict(): SessionDict {
-      return {
-        kind: "SessionDict",
-        csrf_token: this.csrf_token,
-        cookieString: this.cookieString,
-    }
+    return {
+      kind: "SessionDict",
+      csrf_token: this.csrf_token,
+      cookieString: this.cookieString,
+    };
   }
 
-  public async updateSession(denops: Denops, cookies: Array<Cookie>): Promise<void>{
-    this.cookieString = mergeCookieString(cookies)
-    await vars.globals.set(denops, "atcoder_facilitator#session", this.getSessionDict());
+  public async updateSession(
+    denops: Denops,
+    cookies: Array<Cookie>,
+  ): Promise<void> {
+    this.cookieString = mergeCookieString(cookies);
+    await vars.globals.set(
+      denops,
+      "atcoder_facilitator#session",
+      this.getSessionDict(),
+    );
   }
 
   public async login(
@@ -46,8 +56,10 @@ export class Session {
     let cookies = getSetCookies(req.headers);
     let cookieString = mergeCookieString(cookies);
 
-    const revelSession = cookies.find((cookie) => cookie.name == "REVEL_SESSION")
-    if(revelSession == undefined) return;
+    const revelSession = cookies.find((cookie) =>
+      cookie.name == "REVEL_SESSION"
+    );
+    if (revelSession == undefined) return;
 
     const csrf_token = findString(
       decodeURIComponent(
@@ -77,7 +89,7 @@ export class Session {
 
     if (cookieString.indexOf("success") < 0) {
       console.error("login failed.");
-      return
+      return;
     }
     console.log("login succeed.");
     this.csrf_token = csrf_token;

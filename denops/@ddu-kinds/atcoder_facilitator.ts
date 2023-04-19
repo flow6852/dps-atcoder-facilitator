@@ -1,13 +1,13 @@
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import type { Actions } from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
+import type { Actions } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
 import {
   ActionFlags,
   BaseKind,
   DduItem,
   PreviewContext,
   Previewer,
-} from "https://deno.land/x/ddu_vim@v2.3.0/types.ts";
-import {QDict} from "../atcoder_facilitator/qdict.ts";
+} from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
+import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {
   qdict: QDict;
@@ -37,7 +37,7 @@ export class Kind extends BaseKind<Params> {
 
   override actions: Actions<Params> = {
     submit: async (
-      args: { denops: Denops; items: DduItem[]; actionParams: unknown},
+      args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) => {
       for (const item of args.items) {
         const action = item.action as ActionData;
@@ -130,7 +130,7 @@ function refineQDict(qdict: QDict): Array<string> {
   ret.push("Problem");
   ret = ret.concat((qdict.problem ?? "").split("\n"));
 
-  // constraint 
+  // constraint
   if (qdict.constraint != undefined) {
     ret.push("Constraint");
     ret = ret.concat(qdict.constraint.split("\n"));

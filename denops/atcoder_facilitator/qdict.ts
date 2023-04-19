@@ -5,7 +5,7 @@ import {
   DOMParser,
   HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
-import { getSetCookies } from "https://deno.land/std@0.179.0/http/cookie.ts";
+import { getSetCookies } from "https://deno.land/std@0.184.0/http/cookie.ts";
 
 export type QDict = {
   kind: "QDict";
