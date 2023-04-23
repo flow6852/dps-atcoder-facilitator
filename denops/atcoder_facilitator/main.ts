@@ -90,6 +90,7 @@ export function main(denops: Denops): void {
         denops,
         "atcoder_facilitator#qdict",
       ) as Array<QDict>;
+
       const sess = await vars.globals.get(
         denops,
         "atcoder_facilitator#session",
@@ -152,9 +153,9 @@ export function main(denops: Denops): void {
       ) {
         return -1;
       } else if ((args as SubmitArgs).qname != undefined) {
-        selector = (args as SubmitArgs).qname;
+        selector = (args as SubmitArgs).qname as string;
       } else if ((args as SubmitArgs).qdict != undefined) {
-        selector = (args as SubmitArgs).qdict.url;
+        selector = ((args as SubmitArgs).qdict as QDict).url;
       } else {
         return -1;
       }
@@ -216,7 +217,7 @@ export function main(denops: Denops): void {
       ) as Array<string>;
       const buildResult = await new Deno.Command(
         buildCmd[0],
-        { args: buildCmd.slice(1) },
+        { args: buildCmd.slice(1).length < 1 ? [""]: buildCmd.slice(1)},
       ).output();
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
@@ -521,7 +522,7 @@ async function exec(denops: Denops, inputStr: string): Promise<ExecStatus> {
   const execResult = new Deno.Command(
     execCmd[0],
     {
-      args: execCmd.slice(1),
+      args: execCmd.slice(1).length < 1 ? [""] : execCmd.slice(1),
       stdin: "piped",
       stdout: "piped",
       stderr: "piped",
@@ -531,6 +532,7 @@ async function exec(denops: Denops, inputStr: string): Promise<ExecStatus> {
   const input = execResult.stdin.getWriter();
   await input.write(echoOutputExample.stdout);
   await input.close();
+  
 
   const mainExec = execResult.output();
   let flg = false;
