@@ -4,6 +4,7 @@ import {
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
+import * as fn from "https://deno.land/x/denops_std@v4.0.0/function/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
@@ -197,14 +198,17 @@ export function main(denops: Denops): void {
       const isRefreshDdu = (args as StatusAfterSubmit).isRefreshDdu;
       let judgeStatus =
         (await getStatus(denops, session, qdict, qdict.sids[0].sid))[0].status;
+      const uiName = await vars.buffers.get(denops, "ddu_ui_name", await fn.bufnr(denops, "%"));
+      console.log(uiName)
       while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
-        if (isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+        if (isRefreshDdu) denops.call("ddu#redraw", uiName);
+        
         await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
         judgeStatus =
           (await getStatus(denops, session, qdict, qdict.sids[0].sid))[0]
             .status;
       }
-      if (isRefreshDdu) await denops.call("ddu#ui#do_action", "refreshItems");
+      if (isRefreshDdu) denops.call("ddu#redraw", uiName);
       else console.log(judgeStatus);
     },
 
