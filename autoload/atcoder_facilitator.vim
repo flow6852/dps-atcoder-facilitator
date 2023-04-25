@@ -21,8 +21,8 @@ function! atcoder_facilitator#submit(arg) abort " arg = qname
     call denops#request('atcoder_facilitator', 'submit', [extend(a:arg, {'file': expand('%')})])
 endfunction
 
-function! atcoder_facilitator#statusAfterSubmit(qdict, isRefreshDdu)
-    call denops#notify('atcoder_facilitator', 'statusAfterSubmit', [{'qdict': a:qdict, 'isRefreshDdu': a:isRefreshDdu}])
+function! atcoder_facilitator#statusAfterSubmit(qdict, isRefreshDdu, dduUiName)
+    call denops#notify('atcoder_facilitator', 'statusAfterSubmit', [{'qdict': a:qdict, 'isRefreshDdu': a:isRefreshDdu, 'dduUiName': a:dduUiName}])
 endfunction
 
 function! atcoder_facilitator#runTests(arg) abort " arg = qname

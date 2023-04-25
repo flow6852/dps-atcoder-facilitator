@@ -4,7 +4,6 @@ import {
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
-import * as fn from "https://deno.land/x/denops_std@v4.0.0/function/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
@@ -171,45 +170,27 @@ export function main(denops: Denops): void {
       );
     },
 
-    async statusAfterSubmit(args: unknown): Promise<void> {
+    async statusAfterSubmit(args: unknown): Promise<unknown> {
       const sess = await vars.globals.get(
         denops,
         "atcoder_facilitator#session",
       ) as SessionDict;
-      const qds = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#qdict",
-      ) as Array<QDict>;
-      if (sess == undefined || qds == undefined) {
+      if (sess == undefined) {
         return;
       }
       const session = new Session(sess as SessionDict);
-      let i = 0;
-      for (i = 0; i < qds.length; i++) {
-        if ((args as StatusAfterSubmit).qdict.url == qds[i].url) {
-          break;
-        }
-      }
 
-      if (i >= qds.length) return;
+      const qdict: Question = new Question((args as StatusAfterSubmit).qdict);
 
-      const qdict: Question = new Question(qds[i]);
-
-      const isRefreshDdu = (args as StatusAfterSubmit).isRefreshDdu;
       let judgeStatus =
-        (await getStatus(denops, session, qdict, qdict.sids[0].sid))[0].status;
-      const uiName = await vars.buffers.get(denops, "ddu_ui_name", await fn.bufnr(denops, "%"));
-      console.log(uiName)
+        (await fetchStatus(denops, session, qdict, qdict.sids[0].sid))[0].status;
       while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
-        if (isRefreshDdu) denops.call("ddu#redraw", uiName);
-        
         await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
         judgeStatus =
-          (await getStatus(denops, session, qdict, qdict.sids[0].sid))[0]
+          (await fetchStatus(denops, session, qdict, qdict.sids[0].sid))[0]
             .status;
       }
-      if (isRefreshDdu) denops.call("ddu#redraw", uiName);
-      else console.log(judgeStatus);
+      return judgeStatus;
     },
 
     async runTests(args: unknown): Promise<unknown> { // test automatically
@@ -221,7 +202,7 @@ export function main(denops: Denops): void {
       ) as Array<string>;
       const buildResult = await new Deno.Command(
         buildCmd[0],
-        { args: buildCmd.slice(1).length < 1 ? [""]: buildCmd.slice(1)},
+        { args: buildCmd.slice(1).length < 1 ? [""] : buildCmd.slice(1) },
       ).output();
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
@@ -471,7 +452,7 @@ async function getLangId(
   return langid;
 }
 
-export async function getStatus(
+export async function fetchStatus(
   denops: Denops,
   session: Session,
   qdict: Question,
@@ -536,7 +517,6 @@ async function exec(denops: Denops, inputStr: string): Promise<ExecStatus> {
   const input = execResult.stdin.getWriter();
   await input.write(echoOutputExample.stdout);
   await input.close();
-  
 
   const mainExec = execResult.output();
   let flg = false;

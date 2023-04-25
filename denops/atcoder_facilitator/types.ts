@@ -67,5 +67,4 @@ export type StatusResult = {
 
 export type StatusAfterSubmit = {
   qdict: QDict;
-  isRefreshDdu: boolean;
 };

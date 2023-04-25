@@ -6,7 +6,7 @@ import {
 import { Denops } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
 import { Session, SessionDict } from "../atcoder_facilitator/session.ts";
-import { getStatus } from "../atcoder_facilitator/main.ts";
+import { fetchStatus } from "../atcoder_facilitator/main.ts";
 import { Question } from "../atcoder_facilitator/qdict.ts";
 import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 
@@ -32,7 +32,7 @@ export class Source extends BaseSource<Params> {
             items.push({
               word: sid.date + "|" + item.title + "|" + sid.sid +
                 "|" +
-                (await getStatus(
+                (await fetchStatus(
                   args.denops,
                   new Session(
                     await vars.globals.get(
