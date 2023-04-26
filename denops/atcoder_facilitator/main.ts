@@ -27,6 +27,9 @@ export function main(denops: Denops): void {
   const questions: Array<Question> = Array<Question>(0);
   const session: Session = new Session();
   denops.dispatcher = {
+    async getQDicts(): Promise<unknown> {
+      return await new Promise((_resolve) => questions.map((qdict) => qdict.getQDict()));
+    },
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
       await session.login(
         (args as LoginArgs).username,
@@ -103,9 +106,9 @@ export function main(denops: Denops): void {
           break;
         }
       }
-  
+
       if (i >= questions.length) return -1;
-  
+
       const qdict: Question = questions[i];
       return await qdict.postSubmit(
         denops,
@@ -193,13 +196,8 @@ export function main(denops: Denops): void {
       const result = await exec((args as RunDebugArgs).debugInput, execCmd);
       return result.output;
     },
-
-    async getQDicts(): Promise<unknown> {
-      return questions.map((qdict) => qdict.getQDict());
-    },
   };
 }
-
 
 function matchResultOutput(result: string, output: string): boolean {
   let ret = true;
@@ -250,8 +248,10 @@ async function getContestsURLs(
   return urls;
 }
 
-
-async function exec(inputStr: string, execCmd: Array<string>): Promise<ExecStatus> {
+async function exec(
+  inputStr: string,
+  execCmd: Array<string>,
+): Promise<ExecStatus> {
   let result = { status: "Pre", output: "" };
   const echoOutputExample = await new Deno.Command("echo", {
     args: ["-e", inputStr],
