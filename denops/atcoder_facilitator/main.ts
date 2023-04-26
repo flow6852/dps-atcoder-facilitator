@@ -26,6 +26,9 @@ type ExecStatus = {
 const ATCODER_URL = "https://atcoder.jp";
 
 export function main(denops: Denops): void {
+  const questions:Array<Question> = {};
+  let session: Session = null;
+
   denops.dispatcher = {
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
       const session = new Session();
@@ -450,47 +453,6 @@ async function getLangId(
     }
   }
   return langid;
-}
-
-export async function fetchStatus(
-  denops: Denops,
-  session: Session,
-  qdict: Question,
-  sid: number,
-) {
-  const statuses: Array<StatusResult> = Array(0);
-
-  let url = qdict.url.split("/").slice(0, -2).join("/") +
-    "/submissions/me/status/json";
-  if (sid != null) {
-    url += "?sids[]=" + sid;
-  }
-  const req: Request = new Request(url, {
-    method: "GET",
-    headers: { cookie: session.cookieString },
-    redirect: "manual",
-    credentials: "include",
-  });
-  const response = await fetch(req);
-  session.updateSession(denops, getSetCookies(response.headers));
-
-  const responseJson = await response.json();
-  for (const key in responseJson.Result) {
-    const resHTML = new DOMParser().parseFromString(
-      "<table>" + responseJson.Result[key].Html + "</table>",
-      "text/html",
-    );
-    const sid = qdict.sids.find((sid) => sid.sid == Number(key));
-    if (resHTML && qdict.title && sid) {
-      statuses.push({
-        title: qdict.title,
-        sid: sid,
-        status: resHTML.getElementsByTagName("td")[0].textContent,
-      });
-    }
-  }
-
-  return statuses;
 }
 
 async function exec(denops: Denops, inputStr: string): Promise<ExecStatus> {

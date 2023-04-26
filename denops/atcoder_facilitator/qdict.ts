@@ -295,7 +295,52 @@ export class Question {
       this.sids.unshift({
         sid: Number(sid.split("/")[sid.split("/").length - 1]),
         date: date,
+        status: "WJ",
       });
     }
+  }
+
+  public async fetchStatus(
+    denops: Denops,
+    session: Session,
+    sid: number,
+  ) {
+    let sidIndex = 0;
+    for(;sidIndex < this.sid.length; sidIndex++){
+      if(this.sid[sidIndex].sid == sid){
+        break;
+      }
+    }
+    if(sidIndex >= this.sid.length) return;
+
+    const statuses: Array<StatusResult> = Array(0);
+  
+    let url = this.url.split("/").slice(0, -2).join("/") +
+      "/submissions/me/status/json";
+    if (sid != null) {
+      url += "?sids[]=" + sid;
+    }
+    const req: Request = new Request(url, {
+      method: "GET",
+      headers: { cookie: session.cookieString },
+      redirect: "manual",
+      credentials: "include",
+    });
+    const response = await fetch(req);
+    session.updateSession(denops, getSetCookies(response.headers));
+  
+    const responseJson = await response.json();
+    for (const key in responseJson.Result) {
+      const resHTML = new DOMParser().parseFromString(
+        "<table>" + responseJson.Result[key].Html + "</table>",
+        "text/html",
+      );
+      const sid = this.sids.find((sid) => sid.sid == Number(key));
+      if (resHTML && quest.title && sid) {
+        this.sid[sidIndex].status = resHTML.getElementsByTagName("td")[0].textContent
+      }
+    }
+  
+    return statuses;
   }
 }

@@ -31,18 +31,7 @@ export class Source extends BaseSource<Params> {
           for (const sid of item.sids) {
             items.push({
               word: sid.date + "|" + item.title + "|" + sid.sid +
-                "|" +
-                (await fetchStatus(
-                  args.denops,
-                  new Session(
-                    await vars.globals.get(
-                      args.denops,
-                      "atcoder_facilitator#session",
-                    ) as SessionDict,
-                  ),
-                  new Question(item),
-                  sid.sid,
-                ))[0].status,
+                "|" + sid.status,
               action: {
                 qdict: item,
               },

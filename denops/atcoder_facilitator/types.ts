@@ -45,6 +45,7 @@ export type IOExample = {
 export type Sid = {
   date: string;
   sid: number;
+  status:string;
 };
 
 export type StatusArgs = {
