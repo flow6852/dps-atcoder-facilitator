@@ -33,34 +33,21 @@ export function main(denops: Denops): void {
         (args as LoginArgs).username,
         (args as LoginArgs).password,
       );
-
-      // await vars.globals.set(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      //   session.getSessionDict(),
-      // );
     },
 
     async getQuestions(args: unknown): Promise<void> {
-      // const beforeQDict = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#qdict",
-      // ) as Array<QDict>;
-      // const sess = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      // ) as SessionDict;
-
       for (const qname of (args as QuestionsArgs).qnames) {
         const url = ATCODER_URL + "/contests/" + qname.split("_")[0] +
           "/tasks/" + qname;
         const question = new Question(url);
         if (questions.reduce((flg, qdict) => flg && qdict.url != url, true)) {
-          if (await question.fetchQuestion(
-            denops,
-            (args as QuestionsArgs).lang,
-            session,
-          )) {
+          if (
+            await question.fetchQuestion(
+              denops,
+              (args as QuestionsArgs).lang,
+              session,
+            )
+          ) {
             questions.push(question);
           } else {
             console.error(
@@ -70,32 +57,9 @@ export function main(denops: Denops): void {
           }
         }
       }
-      // await vars.globals.set(
-      //   denops,
-      //   "atcoder_facilitator#qdict",
-      //   beforeQDict.concat(qdict),
-      // );
-      // await vars.globals.set(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      //   session.getSessionDict(),
-      // );
     },
 
     async getContests(args: unknown): Promise<void> {
-      // const beforeQDict = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#qdict",
-      // ) as Array<QDict>;
-
-      // const sess = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      // ) as SessionDict;
-      // if (sess == undefined) return;
-
-      // const session = new Session(sess);
-      // const qdict = new Array(0);
       for (const cname of (args as ContestsArgs).cnames) {
         await getContestsURLs(denops, cname, session);
         const urls = await getContestsURLs(denops, cname, session);
@@ -105,11 +69,12 @@ export function main(denops: Denops): void {
           ) {
             const question = new Question(url);
             if (
-            await question.fetchQuestion(
-              denops,
-              (args as QuestionsArgs).lang,
-              session,
-            )) {
+              await question.fetchQuestion(
+                denops,
+                (args as QuestionsArgs).lang,
+                session,
+              )
+            ) {
               questions.push(question);
             } else {
               console.error(
@@ -119,37 +84,10 @@ export function main(denops: Denops): void {
           }
         }
       }
-      // await vars.globals.set(
-      //   denops,
-      //   "atcoder_facilitator#qdict",
-      //   beforeQDict.concat(qdict),
-      // );
-      // await vars.globals.set(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      //   session.getSessionDict(),
-      // );
     },
 
     async submit(args: unknown): Promise<unknown> {
-      // const sess = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      // ) as SessionDict;
-      // const qds = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#qdict",
-      // ) as Array<QDict>;
-      // if (sess == undefined || qds == undefined) {
-      //   return -1;
-      // }
       let selector: string;
-      // if (
-      //   (args as SubmitArgs).qname == undefined &&
-      //   (args as SubmitArgs).qdict == undefined
-      // ) {
-      //   return -1;
-      // } else 
       if ((args as SubmitArgs).qname != undefined) {
         selector = (args as SubmitArgs).qname as string;
       } else if ((args as SubmitArgs).qdict != undefined) {
@@ -169,24 +107,14 @@ export function main(denops: Denops): void {
     },
 
     async statusAfterSubmit(args: unknown): Promise<unknown> {
-      // const sess = await vars.globals.get(
-      //   denops,
-      //   "atcoder_facilitator#session",
-      // ) as SessionDict;
-      // if (sess == undefined) {
-      //   return;
-      // }
-      // const session = new Session(sess as SessionDict);
-
       const qdict: Question = new Question((args as StatusAfterSubmit).qdict);
 
-
-      await qdict.fetchStatus(denops, session, qdict.sids[0].sid)
-      let judgeStatus = qdict.sids[0].status
+      await qdict.fetchStatus(denops, session, qdict.sids[0].sid);
+      let judgeStatus = qdict.sids[0].status;
       while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
         await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
-        await qdict.fetchStatus(denops, session, qdict.sids[0].sid)
-        judgeStatus = qdict.sids[0].status
+        await qdict.fetchStatus(denops, session, qdict.sids[0].sid);
+        judgeStatus = qdict.sids[0].status;
       }
       return judgeStatus;
     },
@@ -262,10 +190,9 @@ export function main(denops: Denops): void {
       return result.output;
     },
 
-    async getQDicts() : Promise<unknown>{
-      console.log(questions)
-      return questions;
-    }
+    async getQDicts(): Promise<unknown> {
+      return questions.map((qdict) => qdict.getQDict());
+    },
   };
 }
 

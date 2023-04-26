@@ -52,6 +52,10 @@ function! atcoder_facilitator#getStatus(arg) abort "
     return denops#request('atcoder_facilitator', 'getStatus', [extend(a:arg)])
 endfunction
 
+function! atcoder_facilitator#getQDicts()
+    return denops#request('atcoder_facilitator', 'getQDicts', []) 
+endfunction
+
 function! atcoder_facilitator#matchQDict(arg) abort 
     for item in g:atcoder_facilitator#qdict
         if get(item, "url") == get(a:arg, "url")
