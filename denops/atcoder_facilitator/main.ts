@@ -12,11 +12,10 @@ import {
   RunTestArgs,
   RunTestResult,
   StatusAfterSubmit,
-  StatusResult,
   SubmitArgs,
 } from "./types.ts";
 import { QDict, Question } from "./qdict.ts";
-import { Session, SessionDict } from "./session.ts";
+import { Session } from "./session.ts";
 
 type ExecStatus = {
   status: string;
@@ -26,136 +25,132 @@ type ExecStatus = {
 const ATCODER_URL = "https://atcoder.jp";
 
 export function main(denops: Denops): void {
-  const questions:Array<Question> = {};
-  let session: Session = null;
-
+  const questions: Array<Question> = Array<Question>(0);
+  const session: Session = new Session();
   denops.dispatcher = {
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
-      const session = new Session();
       await session.login(
         (args as LoginArgs).username,
         (args as LoginArgs).password,
       );
-      await vars.globals.set(
-        denops,
-        "atcoder_facilitator#session",
-        session.getSessionDict(),
-      );
+
+      // await vars.globals.set(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      //   session.getSessionDict(),
+      // );
     },
 
     async getQuestions(args: unknown): Promise<void> {
-      const beforeQDict = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#qdict",
-      ) as Array<QDict>;
-      const sess = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#session",
-      ) as SessionDict;
-      if (sess == undefined) return;
+      // const beforeQDict = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#qdict",
+      // ) as Array<QDict>;
+      // const sess = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      // ) as SessionDict;
 
-      const qdict = new Array(0);
-      const session = new Session(sess);
       for (const qname of (args as QuestionsArgs).qnames) {
         const url = ATCODER_URL + "/contests/" + qname.split("_")[0] +
           "/tasks/" + qname;
         const question = new Question(url);
-        if (beforeQDict.reduce((flg, qdict) => flg && qdict.url != url, true)) {
-          await question.fetchQuestion(
+        if (questions.reduce((flg, qdict) => flg && qdict.url != url, true)) {
+          if (await question.fetchQuestion(
             denops,
             (args as QuestionsArgs).lang,
             session,
-          );
-          if (question.getQDict() == undefined) {
+          )) {
+            questions.push(question);
+          } else {
             console.error(
               "can't get from " + ATCODER_URL + "/contests/" +
                 qname.split("_")[0] + "/tasks/" + qname,
             );
-          } else {
-            qdict.push(question.getQDict());
           }
         }
       }
-      await vars.globals.set(
-        denops,
-        "atcoder_facilitator#qdict",
-        beforeQDict.concat(qdict),
-      );
-      await vars.globals.set(
-        denops,
-        "atcoder_facilitator#session",
-        session.getSessionDict(),
-      );
+      // await vars.globals.set(
+      //   denops,
+      //   "atcoder_facilitator#qdict",
+      //   beforeQDict.concat(qdict),
+      // );
+      // await vars.globals.set(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      //   session.getSessionDict(),
+      // );
     },
 
     async getContests(args: unknown): Promise<void> {
-      const beforeQDict = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#qdict",
-      ) as Array<QDict>;
+      // const beforeQDict = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#qdict",
+      // ) as Array<QDict>;
 
-      const sess = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#session",
-      ) as SessionDict;
-      if (sess == undefined) return;
+      // const sess = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      // ) as SessionDict;
+      // if (sess == undefined) return;
 
-      const session = new Session(sess);
-      const qdict = new Array(0);
+      // const session = new Session(sess);
+      // const qdict = new Array(0);
       for (const cname of (args as ContestsArgs).cnames) {
         await getContestsURLs(denops, cname, session);
         const urls = await getContestsURLs(denops, cname, session);
         for (const url of urls) {
           if (
-            beforeQDict.reduce((flg, qdict) => flg && qdict.url != url, true)
+            questions.reduce((flg, qdict) => flg && qdict.url != url, true)
           ) {
             const question = new Question(url);
+            if (
             await question.fetchQuestion(
               denops,
               (args as QuestionsArgs).lang,
               session,
-            );
-            if (question.getQDict() == undefined) {
+            )) {
+              questions.push(question);
+            } else {
               console.error(
                 "can't get from " + url,
               );
-            } else {
-              qdict.push(question.getQDict());
             }
           }
         }
       }
-      await vars.globals.set(
-        denops,
-        "atcoder_facilitator#qdict",
-        beforeQDict.concat(qdict),
-      );
-      await vars.globals.set(
-        denops,
-        "atcoder_facilitator#session",
-        session.getSessionDict(),
-      );
+      // await vars.globals.set(
+      //   denops,
+      //   "atcoder_facilitator#qdict",
+      //   beforeQDict.concat(qdict),
+      // );
+      // await vars.globals.set(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      //   session.getSessionDict(),
+      // );
     },
 
     async submit(args: unknown): Promise<unknown> {
-      const sess = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#session",
-      ) as SessionDict;
-      const qds = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#qdict",
-      ) as Array<QDict>;
-      if (sess == undefined || qds == undefined) {
-        return -1;
-      }
+      // const sess = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      // ) as SessionDict;
+      // const qds = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#qdict",
+      // ) as Array<QDict>;
+      // if (sess == undefined || qds == undefined) {
+      //   return -1;
+      // }
       let selector: string;
-      if (
-        (args as SubmitArgs).qname == undefined &&
-        (args as SubmitArgs).qdict == undefined
-      ) {
-        return -1;
-      } else if ((args as SubmitArgs).qname != undefined) {
+      // if (
+      //   (args as SubmitArgs).qname == undefined &&
+      //   (args as SubmitArgs).qdict == undefined
+      // ) {
+      //   return -1;
+      // } else 
+      if ((args as SubmitArgs).qname != undefined) {
         selector = (args as SubmitArgs).qname as string;
       } else if ((args as SubmitArgs).qdict != undefined) {
         selector = ((args as SubmitArgs).qdict as QDict).url;
@@ -166,32 +161,32 @@ export function main(denops: Denops): void {
       const reg = new RegExp(selector);
       return await submit(
         denops,
-        new Session(sess),
-        qds,
+        session,
+        questions,
         reg,
         (args as SubmitArgs).file,
       );
     },
 
     async statusAfterSubmit(args: unknown): Promise<unknown> {
-      const sess = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#session",
-      ) as SessionDict;
-      if (sess == undefined) {
-        return;
-      }
-      const session = new Session(sess as SessionDict);
+      // const sess = await vars.globals.get(
+      //   denops,
+      //   "atcoder_facilitator#session",
+      // ) as SessionDict;
+      // if (sess == undefined) {
+      //   return;
+      // }
+      // const session = new Session(sess as SessionDict);
 
       const qdict: Question = new Question((args as StatusAfterSubmit).qdict);
 
-      let judgeStatus =
-        (await fetchStatus(denops, session, qdict, qdict.sids[0].sid))[0].status;
+
+      await qdict.fetchStatus(denops, session, qdict.sids[0].sid)
+      let judgeStatus = qdict.sids[0].status
       while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
         await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
-        judgeStatus =
-          (await fetchStatus(denops, session, qdict, qdict.sids[0].sid))[0]
-            .status;
+        await qdict.fetchStatus(denops, session, qdict.sids[0].sid)
+        judgeStatus = qdict.sids[0].status
       }
       return judgeStatus;
     },
@@ -266,13 +261,18 @@ export function main(denops: Denops): void {
       const result = await exec(denops, (args as RunDebugArgs).debugInput);
       return result.output;
     },
+
+    async getQDicts() : Promise<unknown>{
+      console.log(questions)
+      return questions;
+    }
   };
 }
 
 async function submit(
   denops: Denops,
   session: Session,
-  qds: Array<QDict>,
+  qds: Array<Question>,
   qname: RegExp,
   file: string,
 ): Promise<number> {
@@ -285,7 +285,7 @@ async function submit(
 
   if (i >= qds.length) return -1;
 
-  const qdict: Question = new Question(qds[i]);
+  const qdict: Question = qds[i];
 
   const url = qdict.url.split("/").slice(0, -2).join("/") +
     "/submit";
@@ -357,16 +357,16 @@ async function submit(
         progLang + ")",
     );
   }
-  await vars.globals.set(
-    denops,
-    "atcoder_facilitator#qdict[" + i + "]",
-    qdict.getQDict(),
-  );
-  await vars.globals.set(
-    denops,
-    "atcoder_facilitator#session",
-    session.getSessionDict(),
-  );
+  // await vars.globals.set(
+  //   denops,
+  //   "atcoder_facilitator#qdict[" + i + "]",
+  //   qdict.getQDict(),
+  // );
+  // await vars.globals.set(
+  //   denops,
+  //   "atcoder_facilitator#session",
+  //   session.getSessionDict(),
+  // );
   return sid;
 }
 

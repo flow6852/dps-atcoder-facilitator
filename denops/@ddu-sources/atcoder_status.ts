@@ -5,9 +5,6 @@ import {
 } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
 import { Denops } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
-import { Session, SessionDict } from "../atcoder_facilitator/session.ts";
-import { fetchStatus } from "../atcoder_facilitator/main.ts";
-import { Question } from "../atcoder_facilitator/qdict.ts";
 import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 
 type Params = Record<never, never>;

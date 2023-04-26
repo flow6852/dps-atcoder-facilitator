@@ -77,7 +77,7 @@ export class Question {
     denops: Denops,
     lang: string,
     session: Session,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const response = await fetch(this.url, {
       headers: { cookie: session.cookieString },
       credentials: "include",
@@ -91,7 +91,10 @@ export class Question {
       "text/html",
     );
 
+    let isFetch = true;
     if (resText != null) this.parseQuestion(resText, lang);
+    else isFetch = false;
+    return isFetch;
   }
 
   private parseQuestion(doc: HTMLDocument, lang: string): void {
@@ -306,15 +309,15 @@ export class Question {
     sid: number,
   ) {
     let sidIndex = 0;
-    for(;sidIndex < this.sid.length; sidIndex++){
-      if(this.sid[sidIndex].sid == sid){
+    for (; sidIndex < this.sids.length; sidIndex++) {
+      if (this.sids[sidIndex].sid == sid) {
         break;
       }
     }
-    if(sidIndex >= this.sid.length) return;
+    if (sidIndex >= this.sids.length) return;
 
-    const statuses: Array<StatusResult> = Array(0);
-  
+    // const statuses: Array<StatusResult> = Array(0);
+
     let url = this.url.split("/").slice(0, -2).join("/") +
       "/submissions/me/status/json";
     if (sid != null) {
@@ -328,7 +331,7 @@ export class Question {
     });
     const response = await fetch(req);
     session.updateSession(denops, getSetCookies(response.headers));
-  
+
     const responseJson = await response.json();
     for (const key in responseJson.Result) {
       const resHTML = new DOMParser().parseFromString(
@@ -336,11 +339,12 @@ export class Question {
         "text/html",
       );
       const sid = this.sids.find((sid) => sid.sid == Number(key));
-      if (resHTML && quest.title && sid) {
-        this.sid[sidIndex].status = resHTML.getElementsByTagName("td")[0].textContent
+      if (resHTML && sid) {
+        this.sids[sidIndex].status =
+          resHTML.getElementsByTagName("td")[0].textContent;
       }
     }
-  
-    return statuses;
+
+    return true;
   }
 }
