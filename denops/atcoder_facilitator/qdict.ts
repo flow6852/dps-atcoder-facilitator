@@ -287,6 +287,123 @@ export class Question {
     this.ioExamples = ioExamples;
   }
 
+  async postSubmit(
+    denops: Denops,
+    session: Session,
+    file: string,
+    progLang: string,
+  ): Promise<number> {
+  
+    const url = this.url.split("/").slice(0, -2).join("/") +
+      "/submit";
+    const taskScreenName = this.url.split("/").at(-1);
+    if (taskScreenName == undefined) {
+      return -1;
+    }
+  
+    // get from buffer?
+    // const progLang = await vars.globals.get(
+    //   denops,
+    //   "atcoder_facilitator#progLang",
+    // ) as string;
+  
+    const getIds = await this.getLangId(
+      denops,
+      progLang,
+      session,
+    );
+    if (getIds == null) {
+      return -1;
+    }
+  
+    const sourceCode = await Deno.readTextFile(
+      (await denops.call("getcwd") as string) + "/" +
+        file,
+    );
+  
+    const csrf_token = session.csrf_token;
+  
+    const body = new FormData();
+  
+    body.append("csrf_token", csrf_token);
+    body.append("data.TaskScreenName", taskScreenName);
+    body.append("data.LanguageId", getIds);
+    body.append("sourceCode", sourceCode);
+  
+    const req: Request = new Request(url, {
+      method: "POST",
+      body: body,
+      headers: { cookie: session.cookieString },
+      redirect: "manual",
+      credentials: "include",
+    });
+    const response = await fetch(req);
+  
+    session.updateSession(denops, getSetCookies(response.headers));
+    const locUrl = response.headers.get("location");
+    const dateUrl = response.headers.get("date");
+    let sid = -1;
+    if (locUrl != null) {
+      const resForSid = await fetch(this.ATCODER_URL + locUrl, {
+        headers: { cookie: session.cookieString },
+      });
+      session.updateSession(denops, getSetCookies(resForSid.headers));
+      const bodyForSid = new DOMParser().parseFromString(
+        await resForSid.text(),
+        "text/html",
+      );
+      if (dateUrl && resForSid.ok && bodyForSid != null) {
+        this.appendSid(bodyForSid, dateUrl);
+        sid = this.sids[0].sid;
+      }
+      console.log("submit succeed.");
+    } else {
+      console.error("submit failed.");
+      console.error("data.TaskScreenName = " + taskScreenName);
+      console.error(
+        "data.LanguageId = " + getIds + "(" +
+          progLang + ")",
+      );
+    }
+    return sid;
+  }
+
+  private async getLangId(
+    denops: Denops,
+    lang: string,
+    session: Session,
+  ): Promise<string | null> {
+    const response = await fetch(this.ATCODER_URL + "/contests/practice/submit", {
+      method: "GET",
+      headers: { cookie: session.cookieString },
+      credentials: "include",
+    });
+  
+    const cookies = getSetCookies(response.headers);
+    session.updateSession(denops, cookies);
+    let langid = null;
+  
+    const body = new DOMParser().parseFromString(
+      await response.text(),
+      "text/html",
+    );
+  
+    if (body == null) {
+      console.error("parse error: " + this.ATCODER_URL + "/contests/practice/submit");
+    } else {
+      const ids = body
+        .getElementsByTagName(
+          "select",
+        )[1].getElementsByTagName("option");
+      for (const id of ids) {
+        if (id.hasAttribute("value") && id.textContent === lang) {
+          langid = id.getAttribute("value");
+        } else continue;
+      }
+    }
+    return langid;
+  }
+
   public appendSid(body: HTMLDocument, date: string): void {
     const tds = body.getElementsByTagName("tbody")[0].getElementsByTagName(
       "tr",

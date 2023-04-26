@@ -26,16 +26,7 @@ function! atcoder_facilitator#statusAfterSubmit(qdict, isRefreshDdu, dduUiName)
 endfunction
 
 function! atcoder_facilitator#runTests(arg) abort " arg = qname
-    if (has_key(a:arg, 'qdict'))
-        return denops#request('atcoder_facilitator', 'runTests', [{'qdict': get(a:arg, 'qdict')}])
-    else
-        for item in g:atcoder_facilitator#qdict
-            if get(item, "url")[-strchars(get(a:arg, 'qname')):] == get(a:arg, 'qname')
-                return denops#request('atcoder_facilitator', 'runTests', [{'qdict': item}])
-            endif
-        endfor
-        echoerr get(a:arg) not downloaded
-    endif
+    return denops#request('atcoder_facilitator', 'runTests', [a:arg])
 endfunction
 
 function! atcoder_facilitator#runDebug() abort

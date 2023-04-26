@@ -22,6 +22,7 @@ export type SubmitArgs = {
   qname?: string;
   qdict?: QDict;
   file: string;
+  progLang: string;
 };
 
 export type RunTestArgs = {

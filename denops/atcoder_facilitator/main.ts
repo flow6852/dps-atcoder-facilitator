@@ -3,7 +3,6 @@ import {
   DOMParser,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
@@ -96,13 +95,23 @@ export function main(denops: Denops): void {
         return -1;
       }
 
-      const reg = new RegExp(selector);
-      return await submit(
+      const qname = new RegExp(selector);
+
+      let i = 0;
+      for (i = 0; i < questions.length; i++) {
+        if (qname.test(questions[i].url)) {
+          break;
+        }
+      }
+  
+      if (i >= questions.length) return -1;
+  
+      const qdict: Question = questions[i];
+      return await qdict.postSubmit(
         denops,
         session,
-        questions,
-        reg,
         (args as SubmitArgs).file,
+        (args as SubmitArgs).progLang,
       );
     },
 
@@ -121,11 +130,8 @@ export function main(denops: Denops): void {
 
     async runTests(args: unknown): Promise<unknown> { // test automatically
       const results: Array<RunTestResult> = new Array(0);
-      const buildCmd = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#buildCmd",
-        [],
-      ) as Array<string>;
+      const buildCmd = (args as RunTestArgs).buildCmd;
+      const execCmd = (args as RunTestArgs).execCmd;
       const buildResult = await new Deno.Command(
         buildCmd[0],
         { args: buildCmd.slice(1).length < 1 ? [""] : buildCmd.slice(1) },
@@ -141,7 +147,7 @@ export function main(denops: Denops): void {
         return results;
       }
       for (const ioExample of question.ioExamples) {
-        const output = await exec(denops, ioExample.inputExample);
+        const output = await exec(ioExample.inputExample, execCmd);
         if (output.status == "TLE") {
           results.push({
             status: "TLE",
@@ -174,11 +180,9 @@ export function main(denops: Denops): void {
     },
 
     async runDebug(args: unknown): Promise<unknown> { // test manually
-      const buildCmd = await vars.globals.get(
-        denops,
-        "atcoder_facilitator#buildCmd",
-        [],
-      ) as Array<string>;
+      const buildCmd = (args as RunDebugArgs).buildCmd;
+      const execCmd = (args as RunDebugArgs).execCmd;
+
       const buildResult = await new Deno.Command(
         buildCmd[0],
         { args: buildCmd.slice(1) },
@@ -186,7 +190,7 @@ export function main(denops: Denops): void {
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
       }
-      const result = await exec(denops, (args as RunDebugArgs).debugInput);
+      const result = await exec((args as RunDebugArgs).debugInput, execCmd);
       return result.output;
     },
 
@@ -196,106 +200,6 @@ export function main(denops: Denops): void {
   };
 }
 
-async function submit(
-  denops: Denops,
-  session: Session,
-  qds: Array<Question>,
-  qname: RegExp,
-  file: string,
-): Promise<number> {
-  let i = 0;
-  for (i = 0; i < qds.length; i++) {
-    if (qname.test(qds[i].url)) {
-      break;
-    }
-  }
-
-  if (i >= qds.length) return -1;
-
-  const qdict: Question = qds[i];
-
-  const url = qdict.url.split("/").slice(0, -2).join("/") +
-    "/submit";
-  const taskScreenName = qdict.url.split("/").at(-1);
-  if (taskScreenName == undefined) {
-    return -1;
-  }
-
-  const progLang = await vars.globals.get(
-    denops,
-    "atcoder_facilitator#progLang",
-  ) as string;
-
-  const getIds = await getLangId(
-    denops,
-    progLang,
-    session,
-  );
-  if (getIds == null) {
-    return -1;
-  }
-
-  const sourceCode = await Deno.readTextFile(
-    (await denops.call("getcwd") as string) + "/" +
-      file,
-  );
-
-  const csrf_token = session.csrf_token;
-
-  const body = new FormData();
-
-  body.append("csrf_token", csrf_token);
-  body.append("data.TaskScreenName", taskScreenName);
-  body.append("data.LanguageId", getIds);
-  body.append("sourceCode", sourceCode);
-
-  const req: Request = new Request(url, {
-    method: "POST",
-    body: body,
-    headers: { cookie: session.cookieString },
-    redirect: "manual",
-    credentials: "include",
-  });
-  const response = await fetch(req);
-
-  session.updateSession(denops, getSetCookies(response.headers));
-  const locUrl = response.headers.get("location");
-  const dateUrl = response.headers.get("date");
-  let sid = -1;
-  if (locUrl != null) {
-    const resForSid = await fetch(ATCODER_URL + locUrl, {
-      headers: { cookie: session.cookieString },
-    });
-    session.updateSession(denops, getSetCookies(resForSid.headers));
-    const bodyForSid = new DOMParser().parseFromString(
-      await resForSid.text(),
-      "text/html",
-    );
-    if (dateUrl && resForSid.ok && bodyForSid != null) {
-      qdict.appendSid(bodyForSid, dateUrl);
-      sid = qdict.sids[0].sid;
-    }
-    console.log("submit succeed.");
-  } else {
-    console.error("submit failed.");
-    console.error("data.TaskScreenName = " + taskScreenName);
-    console.error(
-      "data.LanguageId = " + getIds + "(" +
-        progLang + ")",
-    );
-  }
-  // await vars.globals.set(
-  //   denops,
-  //   "atcoder_facilitator#qdict[" + i + "]",
-  //   qdict.getQDict(),
-  // );
-  // await vars.globals.set(
-  //   denops,
-  //   "atcoder_facilitator#session",
-  //   session.getSessionDict(),
-  // );
-  return sid;
-}
 
 function matchResultOutput(result: string, output: string): boolean {
   let ret = true;
@@ -346,53 +250,13 @@ async function getContestsURLs(
   return urls;
 }
 
-async function getLangId(
-  denops: Denops,
-  lang: string,
-  session: Session,
-): Promise<string | null> {
-  const response = await fetch(ATCODER_URL + "/contests/practice/submit", {
-    method: "GET",
-    headers: { cookie: session.cookieString },
-    credentials: "include",
-  });
 
-  const cookies = getSetCookies(response.headers);
-  session.updateSession(denops, cookies);
-  let langid = null;
-
-  const body = new DOMParser().parseFromString(
-    await response.text(),
-    "text/html",
-  );
-
-  if (body == null) {
-    console.error("parse error: " + ATCODER_URL + "/contests/practice/submit");
-  } else {
-    const ids = body
-      .getElementsByTagName(
-        "select",
-      )[1].getElementsByTagName("option");
-    for (const id of ids) {
-      if (id.hasAttribute("value") && id.textContent === lang) {
-        langid = id.getAttribute("value");
-      } else continue;
-    }
-  }
-  return langid;
-}
-
-async function exec(denops: Denops, inputStr: string): Promise<ExecStatus> {
+async function exec(inputStr: string, execCmd: Array<string>): Promise<ExecStatus> {
   let result = { status: "Pre", output: "" };
   const echoOutputExample = await new Deno.Command("echo", {
     args: ["-e", inputStr],
     stdout: "piped",
   }).output();
-  const execCmd = await vars.globals.get(
-    denops,
-    "atcoder_facilitator#execCmd",
-    [],
-  ) as Array<string>;
   const execResult = new Deno.Command(
     execCmd[0],
     {

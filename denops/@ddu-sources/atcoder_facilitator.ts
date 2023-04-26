@@ -6,7 +6,10 @@ import {
 import { Denops } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
 
-type Params = Record<never, never>;
+type Params = {
+  buildCmd: Array<string>;
+  execCmd: Array<string>;
+};
 
 export class Source extends BaseSource<Params> {
   override kind = "atcoder_facilitator";
@@ -28,6 +31,8 @@ export class Source extends BaseSource<Params> {
             word: item.title ?? "",
             action: {
               qdict: item,
+              buildCmd: args.sourceParams.buildCmd, // args.denops.call("getbufvar", [args.sourceParams.bufname, "atcoder_facilitator_buildCmd"]),
+              execCmd: args.sourceParams.execCmd, // args.denops.call("getbufvar", [args.sourceParams.bufname, "atcoder_facilitator_execCmd"]),
             },
           });
         }
@@ -38,6 +43,9 @@ export class Source extends BaseSource<Params> {
   }
 
   override params(): Params {
-    return {};
+    return {
+      buildCmd: [],
+      execCmd: [],
+    };
   }
 }

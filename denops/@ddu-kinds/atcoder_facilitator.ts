@@ -11,6 +11,8 @@ import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {
   qdict: QDict;
+  buildCmd: Array<string>;
+  execCmd: Array<string>;
   rdicts: Array<RDict>;
 }
 
@@ -59,9 +61,12 @@ export class Kind extends BaseKind<Params> {
       let appendRDicts: Array<RDict> = [];
       for (const item of args.items) {
         const action = item.action as ActionData;
+        console.log(action.buildCmd, action.execCmd)
         appendRDicts = appendRDicts.concat(
           await args.denops.call("atcoder_facilitator#runTests", {
             qdict: action.qdict,
+            buildCmd: action.buildCmd,
+            execCmd: action.execCmd,
           }) as Array<RDict>,
         );
       }
