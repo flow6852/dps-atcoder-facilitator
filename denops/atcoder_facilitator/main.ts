@@ -118,17 +118,25 @@ export function main(denops: Denops): void {
       );
     },
 
-    async statusAfterSubmit(args: unknown): Promise<unknown> {
-      const qdict: Question = new Question((args as StatusAfterSubmit).qdict);
-
-      await qdict.fetchStatus(denops, session, qdict.sids[0].sid);
-      let judgeStatus = qdict.sids[0].status;
-      while (judgeStatus.includes("/") || judgeStatus.includes("WJ")) {
-        await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
-        await qdict.fetchStatus(denops, session, qdict.sids[0].sid);
-        judgeStatus = qdict.sids[0].status;
+    async refreshStatus(args: unknown): Promise<void>{
+      const statusId = args as number;
+      for(const quest of questions){
+        for(const sid of quest.sids){
+          if (sid.sid == statusId){
+            await quest.fetchStatus(denops, session, statusId);
+            break;
+          }
+        }
       }
-      return judgeStatus;
+    },
+
+    async refreshAllStatuses() :Promise<void>{
+      for(const quest of questions){
+        for(const sid of quest.sids){
+          await quest.fetchStatus(denops, session, sid.sid);
+          await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+        }
+      }
     },
 
     async runTests(args: unknown): Promise<unknown> { // test automatically

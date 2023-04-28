@@ -293,39 +293,38 @@ export class Question {
     file: string,
     progLang: string,
   ): Promise<number> {
-  
     const url = this.url.split("/").slice(0, -2).join("/") +
       "/submit";
     const taskScreenName = this.url.split("/").at(-1);
     if (taskScreenName == undefined) {
-      console.error("can't get taskScreenName")
+      console.error("can't get taskScreenName");
       return -1;
     }
-  
+
     const getIds = await this.getLangId(
       denops,
       progLang,
       session,
     );
     if (getIds == null) {
-      console.error("can't get getIDs")
+      console.error("can't get getIDs");
       return -1;
     }
-  
+
     const sourceCode = await Deno.readTextFile(
       (await denops.call("getcwd") as string) + "/" +
         file,
     );
-  
+
     const csrf_token = session.csrf_token;
-  
+
     const body = new FormData();
-  
+
     body.append("csrf_token", csrf_token);
     body.append("data.TaskScreenName", taskScreenName);
     body.append("data.LanguageId", getIds);
     body.append("sourceCode", sourceCode);
-  
+
     const req: Request = new Request(url, {
       method: "POST",
       body: body,
@@ -334,7 +333,7 @@ export class Question {
       credentials: "include",
     });
     const response = await fetch(req);
-  
+
     session.updateSession(denops, getSetCookies(response.headers));
     const locUrl = response.headers.get("location");
     const dateUrl = response.headers.get("date");
@@ -361,7 +360,7 @@ export class Question {
           progLang + ")",
       );
     }
-    console.log(sid)
+    console.log(sid);
     return sid;
   }
 
@@ -370,23 +369,28 @@ export class Question {
     lang: string,
     session: Session,
   ): Promise<string | null> {
-    const response = await fetch(this.ATCODER_URL + "/contests/practice/submit", {
-      method: "GET",
-      headers: { cookie: session.cookieString },
-      credentials: "include",
-    });
-  
+    const response = await fetch(
+      this.ATCODER_URL + "/contests/practice/submit",
+      {
+        method: "GET",
+        headers: { cookie: session.cookieString },
+        credentials: "include",
+      },
+    );
+
     const cookies = getSetCookies(response.headers);
     session.updateSession(denops, cookies);
     let langid = null;
-  
+
     const body = new DOMParser().parseFromString(
       await response.text(),
       "text/html",
     );
-  
+
     if (body == null) {
-      console.error("parse error: " + this.ATCODER_URL + "/contests/practice/submit");
+      console.error(
+        "parse error: " + this.ATCODER_URL + "/contests/practice/submit",
+      );
     } else {
       const ids = body
         .getElementsByTagName(

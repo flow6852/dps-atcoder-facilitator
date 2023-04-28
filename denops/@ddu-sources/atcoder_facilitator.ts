@@ -24,7 +24,6 @@ export class Source extends BaseSource<Params> {
         const bufnr = args.sourceParams.bufnr < 1
           ? fn.bufnr(args.denops, "%")
           : args.sourceParams.bufnr;
-          console.log(bufnr)
         for (
           const item of (await args.denops.call(
             "atcoder_facilitator#getQDicts",
