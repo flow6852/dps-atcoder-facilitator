@@ -298,14 +298,9 @@ export class Question {
       "/submit";
     const taskScreenName = this.url.split("/").at(-1);
     if (taskScreenName == undefined) {
+      console.error("can't get taskScreenName")
       return -1;
     }
-  
-    // get from buffer?
-    // const progLang = await vars.globals.get(
-    //   denops,
-    //   "atcoder_facilitator#progLang",
-    // ) as string;
   
     const getIds = await this.getLangId(
       denops,
@@ -313,6 +308,7 @@ export class Question {
       session,
     );
     if (getIds == null) {
+      console.error("can't get getIDs")
       return -1;
     }
   
@@ -365,6 +361,7 @@ export class Question {
           progLang + ")",
       );
     }
+    console.log(sid)
     return sid;
   }
 
@@ -431,7 +428,7 @@ export class Question {
         break;
       }
     }
-    if (sidIndex >= this.sids.length) return;
+    if (sidIndex >= this.sids.length) return false;
 
     // const statuses: Array<StatusResult> = Array(0);
 

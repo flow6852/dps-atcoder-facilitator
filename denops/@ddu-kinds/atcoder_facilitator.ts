@@ -7,12 +7,12 @@ import {
   PreviewContext,
   Previewer,
 } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
+import * as fn from "https://deno.land/x/denops_std@v4.1.5/function/mod.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {
   qdict: QDict;
-  buildCmd: Array<string>;
-  execCmd: Array<string>;
+  bufnr: number;
   rdicts: Array<RDict>;
 }
 
@@ -43,9 +43,12 @@ export class Kind extends BaseKind<Params> {
     ) => {
       for (const item of args.items) {
         const action = item.action as ActionData;
-        await args.denops.call("atcoder_facilitator#submit", {
-          qdict: action.qdict,
-        });
+        const progLang = fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_progLang");
+        console.log(progLang)
+        // await args.denops.call("atcoder_facilitator#submit", {
+        //   qdict: action.qdict,
+        //   progLang: progLang,
+        // });
       }
       if (
         selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
@@ -61,12 +64,14 @@ export class Kind extends BaseKind<Params> {
       let appendRDicts: Array<RDict> = [];
       for (const item of args.items) {
         const action = item.action as ActionData;
-        console.log(action.buildCmd, action.execCmd)
+        const buildCmd = fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_buildCmd");
+        const execCmd = fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_execCmd");
+        console.log(buildCmd, execCmd);
         appendRDicts = appendRDicts.concat(
           await args.denops.call("atcoder_facilitator#runTests", {
             qdict: action.qdict,
-            buildCmd: action.buildCmd,
-            execCmd: action.execCmd,
+            buildCmd: buildCmd,
+            execCmd: execCmd,
           }) as Array<RDict>,
         );
       }

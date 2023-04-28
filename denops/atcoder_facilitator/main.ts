@@ -28,7 +28,8 @@ export function main(denops: Denops): void {
   const session: Session = new Session();
   denops.dispatcher = {
     async getQDicts(): Promise<unknown> {
-      return await new Promise((_resolve) => questions.map((qdict) => qdict.getQDict()));
+      // return await new Promise((_resolve) => {return questions.map((qdict) => qdict.getQDict())});
+      return questions.map((qdict) => qdict.getQDict());
     },
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
       await session.login(
@@ -109,8 +110,7 @@ export function main(denops: Denops): void {
 
       if (i >= questions.length) return -1;
 
-      const qdict: Question = questions[i];
-      return await qdict.postSubmit(
+      return await questions[i].postSubmit(
         denops,
         session,
         (args as SubmitArgs).file,

@@ -3,12 +3,11 @@ import {
   Item,
   SourceOptions,
 } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
-import { Denops } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
+import { Denops, fn } from "https://deno.land/x/ddu_vim@v2.8.3/deps.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 type Params = {
-  buildCmd: Array<string>;
-  execCmd: Array<string>;
+  bufnr: number;
 };
 
 export class Source extends BaseSource<Params> {
@@ -22,6 +21,10 @@ export class Source extends BaseSource<Params> {
       async start(controller) {
         // get all contests ... commming soon ?
         const items: Item[] = [];
+        const bufnr = args.sourceParams.bufnr < 1
+          ? fn.bufnr(args.denops, "%")
+          : args.sourceParams.bufnr;
+          console.log(bufnr)
         for (
           const item of (await args.denops.call(
             "atcoder_facilitator#getQDicts",
@@ -31,8 +34,7 @@ export class Source extends BaseSource<Params> {
             word: item.title ?? "",
             action: {
               qdict: item,
-              buildCmd: args.sourceParams.buildCmd, // args.denops.call("getbufvar", [args.sourceParams.bufname, "atcoder_facilitator_buildCmd"]),
-              execCmd: args.sourceParams.execCmd, // args.denops.call("getbufvar", [args.sourceParams.bufname, "atcoder_facilitator_execCmd"]),
+              bufnr: bufnr,
             },
           });
         }
@@ -44,8 +46,7 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
-      buildCmd: [],
-      execCmd: [],
+      bufnr: -1,
     };
   }
 }
