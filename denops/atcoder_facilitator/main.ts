@@ -118,11 +118,11 @@ export function main(denops: Denops): void {
       );
     },
 
-    async refreshStatus(args: unknown): Promise<void>{
+    async refreshStatus(args: unknown): Promise<void> {
       const statusId = args as number;
-      for(const quest of questions){
-        for(const sid of quest.sids){
-          if (sid.sid == statusId){
+      for (const quest of questions) {
+        for (const sid of quest.sids) {
+          if (sid.sid == statusId) {
             await quest.fetchStatus(denops, session, statusId);
             break;
           }
@@ -130,13 +130,14 @@ export function main(denops: Denops): void {
       }
     },
 
-    async refreshAllStatuses() :Promise<void>{
-      for(const quest of questions){
-        for(const sid of quest.sids){
-          await quest.fetchStatus(denops, session, sid.sid);
-          await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+    async refreshStatusAll(): Promise<void> {
+      const refQuests = []
+      for (const quest of questions) {
+        for (const sid of quest.sids) {
+          refQuests.push(quest.finJudge(denops, session, sid.sid))
         }
       }
+      await Promise.all(refQuests)
     },
 
     async runTests(args: unknown): Promise<unknown> { // test automatically
