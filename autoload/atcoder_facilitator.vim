@@ -39,12 +39,16 @@ function! atcoder_facilitator#runDebug() abort
     return denops#request('atcoder_facilitator', 'runDebug', [{'debugInput': join(txt, "\n")}])
 endfunction
 
-function! atcoder_facilitator#getStatus(arg) abort " 
+function! atcoder_facilitator#getStatus(arg) abort
     return denops#request('atcoder_facilitator', 'getStatus', [extend(a:arg)])
 endfunction
 
-function! atcoder_facilitator#getQDicts()
+function! atcoder_facilitator#getQDicts() abort
     return denops#request('atcoder_facilitator', 'getQDicts', []) 
+endfunction
+
+function! atcoder_facilitator#refreshStatusAll() abort
+    return denops#notify('atcoder_facilitator', 'refreshStatusAll',[])
 endfunction
 
 function! atcoder_facilitator#matchQDict(arg) abort 

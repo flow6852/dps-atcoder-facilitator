@@ -360,7 +360,6 @@ export class Question {
           progLang + ")",
       );
     }
-    console.log(sid);
     return sid;
   }
 
@@ -424,22 +423,14 @@ export class Question {
   public async fetchStatus(
     denops: Denops,
     session: Session,
-    sid: number,
+    sidIndex: number,
   ) {
-    let sidIndex = 0;
-    for (; sidIndex < this.sids.length; sidIndex++) {
-      if (this.sids[sidIndex].sid == sid) {
-        break;
-      }
-    }
-    if (sidIndex >= this.sids.length) return false;
-
     // const statuses: Array<StatusResult> = Array(0);
 
     let url = this.url.split("/").slice(0, -2).join("/") +
       "/submissions/me/status/json";
-    if (sid != null) {
-      url += "?sids[]=" + sid;
+    if (this.sids[sidIndex] != null) {
+      url += "?sids[]=" + this.sids[sidIndex].sid;
     }
     const req: Request = new Request(url, {
       method: "GET",
@@ -464,5 +455,23 @@ export class Question {
     }
 
     return true;
+  }
+
+  public async finJudge(denops: Denops, session: Session, sid: number) {
+    let sidIndex = 0;
+    for (; sidIndex < this.sids.length; sidIndex++) {
+      if (this.sids[sidIndex].sid == sid) {
+        break;
+      }
+    }
+    if (sidIndex >= this.sids.length) return false;
+    while (
+      this.sids[sidIndex].status.indexOf("/") > 0 ||
+      this.sids[sidIndex].status == "WJ"
+    ) {
+      await this.fetchStatus(denops, session, sidIndex);
+      await denops.call("ddu#ui#do_action", "refreshItems")
+      await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
+    }
   }
 }
