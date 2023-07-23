@@ -1,9 +1,9 @@
 import {
   Cookie,
   getSetCookies,
-} from "https://deno.land/std@0.184.0/http/cookie.ts";
-import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import * as vars from "https://deno.land/x/denops_std@v4.0.0/variable/mod.ts";
+} from "https://deno.land/std@0.195.0/http/cookie.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
+import * as vars from "https://deno.land/x/denops_std@v5.0.1/variable/mod.ts";
 
 export type SessionDict = {
   kind: "SessionDict";

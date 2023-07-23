@@ -1,12 +1,12 @@
-import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
-import type { Actions } from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
+import type { Actions } from "https://deno.land/x/ddu_vim@v3.4.3/types.ts";
 import {
   ActionFlags,
   BaseKind,
   DduItem,
   PreviewContext,
   Previewer,
-} from "https://deno.land/x/ddu_vim@v2.8.3/types.ts";
+} from "https://deno.land/x/ddu_vim@v3.4.3/types.ts";
 import { QDict } from "../atcoder_facilitator/qdict.ts";
 
 export interface ActionData {

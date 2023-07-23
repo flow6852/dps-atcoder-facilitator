@@ -1,8 +1,8 @@
-import { getSetCookies } from "https://deno.land/std@0.179.0/http/cookie.ts";
+import { getSetCookies } from "https://deno.land/std@0.195.0/http/cookie.ts";
 import {
   DOMParser,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
-import { Denops } from "https://deno.land/x/denops_std@v4.0.0/mod.ts";
+import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
   ContestsArgs,
   LoginArgs,
@@ -10,7 +10,6 @@ import {
   RunDebugArgs,
   RunTestArgs,
   RunTestResult,
-  StatusAfterSubmit,
   SubmitArgs,
 } from "./types.ts";
 import { QDict, Question } from "./qdict.ts";
