@@ -267,10 +267,10 @@ atcoder_facilitator#statusAfterSubmit(qdict, isRefreshDdu)
 	    Get status until judged
 	    Args: (qdict: [dict], isRefreshDdu: boolean)
 
-				*g:atcoder_facilitator#qdict*
+				*g:atcoder_facilitator#matchQDict*
 atcoder_facilitator#matchQDict(qdict)
 
-	    return item in *g:atcoder_facilitator#qdict* matched arg
+	    return item in |g:atcoder_facilitator#qdict| matched arg
 	    Args: (qdict: qdict)
 
 ==============================================================================
