@@ -7,16 +7,26 @@ import {
   PreviewContext,
   Previewer,
 } from "https://deno.land/x/ddu_vim@v3.4.3/types.ts";
-import { QDict } from "../atcoder_facilitator/qdict.ts";
+import { isQDict, QDict } from "../atcoder_facilitator/qdict.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export interface ActionData {
   qdict: QDict;
 }
 
+const isActionData = is.ObjectOf({
+  qdict: isQDict,
+});
+
 type PreviewParams = {
   kind: string;
   sdicts: Array<SDict>;
 };
+
+const isPreviewParams = is.ObjectOf({
+  kind: is.String,
+  sdicts: is.ArrayOf(isSDict),
+});
 
 type SDict = {
   title: string;
@@ -27,9 +37,22 @@ type SDict = {
   status: string;
 };
 
+const isSDict = is.ObjectOf({
+  title: is.String,
+  sid: is.ObjectOf({
+    date: is.String,
+    sid: is.Number,
+  }),
+  status: is.String,
+});
+
 interface ActionFlagParams {
   actionFlag: string;
 }
+
+const isActionFlagParams = is.ObjectOf({
+  actionFlag: is.String,
+});
 
 type Params = Record<never, never>;
 
@@ -41,21 +64,27 @@ export class Kind extends BaseKind<Params> {
       args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) => {
       let ret: Array<SDict> = new Array(0);
+      const actionParams = args.actionParams;
+      assert(actionParams, isActionFlagParams);
       for (const item of args.items) {
-        const action = item.action as ActionData;
-        ret = ret.concat(
-          await args.denops.call("atcoder_facilitator#getStatus", {
+        const action = item.action;
+        assert(action, isActionData);
+        const getStatus = await args.denops.call(
+          "atcoder_facilitator#getStatus",
+          {
             qdict: action.qdict,
-          }) as Array<SDict>,
+          },
         );
+        assert(getStatus, isSDict);
+        ret = ret.concat(getStatus);
         if (
-          selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
+          selectFlag(actionParams.actionFlag) ==
             ActionFlags.None
         ) {
           console.log(refineSDict(action.qdict).join("\n"));
         }
       }
-      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
+      return selectFlag(actionParams.actionFlag);
     },
   };
 
@@ -67,8 +96,10 @@ export class Kind extends BaseKind<Params> {
       previewContext: PreviewContext;
     },
   ): Promise<Previewer | undefined> {
-    const params = args.actionParams as PreviewParams;
-    const action = args.item.action as ActionData;
+    const params = args.actionParams;
+    const action = args.item.action;
+    assert(params, isPreviewParams)
+    assert(action, isActionData)
     if (!action) {
       return await Promise.resolve(undefined);
     }

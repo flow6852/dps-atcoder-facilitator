@@ -8,18 +8,8 @@ import {
   Previewer,
 } from "https://deno.land/x/ddu_vim@v3.4.3/types.ts";
 import * as fn from "https://deno.land/x/denops_std@v5.0.1/function/mod.ts";
-import { QDict } from "../atcoder_facilitator/qdict.ts";
-
-export interface ActionData {
-  qdict: QDict;
-  bufnr: number;
-  rdicts: Array<RDict>;
-}
-
-type PreviewParams = {
-  kind: string;
-  rdicts: Array<RDict>;
-};
+import { isQDict, QDict } from "../atcoder_facilitator/qdict.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 type RDict = {
   status: string;
@@ -28,9 +18,42 @@ type RDict = {
   result: string;
 };
 
+const isRDict = is.ObjectOf({
+  status: is.String,
+  inputExample: is.String,
+  outputExample: is.String,
+  result: is.String,
+});
+
+export interface ActionData {
+  qdict: QDict;
+  bufnr: number;
+  rdicts: Array<RDict>;
+}
+
+const isActionData = is.ObjectOf({
+  qdict: isQDict,
+  bufnr: is.Number,
+  rdicts: is.ArrayOf(isRDict),
+});
+
+type PreviewParams = {
+  kind: string;
+  rdicts: Array<RDict>;
+};
+
+const isPreviewParams = is.ObjectOf({
+  kind: is.String,
+  rdicts: is.ArrayOf(isRDict),
+});
+
 interface ActionFlagParams {
   actionFlag: string;
 }
+
+const isActionFlagParams = is.ObjectOf({
+  actionFlag: is.String,
+});
 
 type Params = Record<never, never>;
 
@@ -41,46 +64,64 @@ export class Kind extends BaseKind<Params> {
     submit: async (
       args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) => {
+      const actionParams = args.actionParams;
+      assert(actionParams, isActionFlagParams);
       for (const item of args.items) {
-        const action = item.action as ActionData;
-        const progLang = await fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_progLang");
+        const action = item.action;
+        assert(action, isActionData);
+        const progLang = await fn.getbufvar(
+          args.denops,
+          action.bufnr,
+          "atcoder_facilitator_progLang",
+        );
         await args.denops.call("atcoder_facilitator#submit", {
           qdict: action.qdict,
           progLang: progLang,
         });
       }
       if (
-        selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
+        selectFlag(actionParams.actionFlag) ==
           ActionFlags.None
       ) {
         console.log(refineRDict(this.rdicts).join("\n"));
       }
-      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
+      return selectFlag(actionParams.actionFlag);
     },
     runTests: async (
       args: { denops: Denops; items: DduItem[]; actionParams: unknown },
     ) => {
+        const actionParams = args.actionParams
+        assert(actionParams, isActionFlagParams)
       let appendRDicts: Array<RDict> = [];
       for (const item of args.items) {
-        const action = item.action as ActionData;
-        const buildCmd = await fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_buildCmd");
-        const execCmd = await fn.getbufvar(args.denops, action.bufnr, "atcoder_facilitator_execCmd");
-        appendRDicts = appendRDicts.concat(
-          await args.denops.call("atcoder_facilitator#runTests", {
-            qdict: action.qdict,
-            buildCmd: buildCmd,
-            execCmd: execCmd,
-          }) as Array<RDict>,
+        const action = item.action;
+        assert(action, isActionData);
+        const buildCmd = await fn.getbufvar(
+          args.denops,
+          action.bufnr,
+          "atcoder_facilitator_buildCmd",
         );
+        const execCmd = await fn.getbufvar(
+          args.denops,
+          action.bufnr,
+          "atcoder_facilitator_execCmd",
+        );
+        const ardict = await args.denops.call("atcoder_facilitator#runTests", {
+          qdict: action.qdict,
+          buildCmd: buildCmd,
+          execCmd: execCmd,
+        });
+        assert(ardict, isRDict);
+        appendRDicts = appendRDicts.concat(ardict);
       }
       this.rdicts = appendRDicts;
       if (
-        selectFlag((args.actionParams as ActionFlagParams).actionFlag) ==
+        selectFlag(actionParams.actionFlag) ==
           ActionFlags.None
       ) {
         console.log(refineRDict(this.rdicts).join("\n"));
       }
-      return selectFlag((args.actionParams as ActionFlagParams).actionFlag);
+      return selectFlag(actionParams.actionFlag);
     },
   };
 
@@ -92,8 +133,10 @@ export class Kind extends BaseKind<Params> {
       previewContext: PreviewContext;
     },
   ): Promise<Previewer | undefined> {
-    const params = args.actionParams as PreviewParams;
-    const action = args.item.action as ActionData;
+    const params = args.actionParams;
+    const action = args.item.action;
+    assert(params, isPreviewParams)
+    assert(action, isActionData)
     if (!action) {
       return await Promise.resolve(undefined);
     }
