@@ -5,6 +5,13 @@ import {
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
   ContestsArgs,
+  isContestsArgs,
+  isLoginArgs,
+  isQuestionsArgs,
+  isRunDebugArgs,
+  isRunTestArgs,
+  isRunTestResult,
+  isSubmitArgs,
   LoginArgs,
   QuestionsArgs,
   RunDebugArgs,
@@ -12,8 +19,9 @@ import {
   RunTestResult,
   SubmitArgs,
 } from "./types.ts";
-import { QDict, Question } from "./qdict.ts";
-import { Session } from "./session.ts";
+import { isQDict, QDict, Question } from "./qdict.ts";
+import { isSession, Session } from "./session.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 type ExecStatus = {
   status: string;
@@ -31,9 +39,11 @@ export function main(denops: Denops): void {
       return questions.map((qdict) => qdict.getQDict());
     },
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
+      const login = args;
+      assert(login, isLoginArgs);
       await session.login(
-        (args as LoginArgs).username,
-        (args as LoginArgs).password,
+        login.username,
+        login.password,
       );
     },
 
@@ -130,13 +140,13 @@ export function main(denops: Denops): void {
     },
 
     async refreshStatusAll(): Promise<void> {
-      const refQuests = []
+      const refQuests = [];
       for (const quest of questions) {
         for (const sid of quest.sids) {
-          refQuests.push(quest.finJudge(denops, session, sid.sid))
+          refQuests.push(quest.finJudge(denops, session, sid.sid));
         }
       }
-      await Promise.all(refQuests)
+      await Promise.all(refQuests);
     },
 
     async runTests(args: unknown): Promise<unknown> { // test automatically

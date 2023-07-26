@@ -1,4 +1,4 @@
-import { IOExample, Sid } from "./types.ts";
+import { IOExample, Sid, isIOExample, isSid } from "./types.ts";
 import { Session } from "./session.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
@@ -6,6 +6,7 @@ import {
   HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { getSetCookies } from "https://deno.land/std@0.195.0/http/cookie.ts";
+import { is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export type QDict = {
   kind: "QDict";
@@ -19,6 +20,12 @@ export type QDict = {
   ioExamples?: Array<IOExample>;
   sids: Array<Sid>;
 };
+
+const isQDict = is.ObjectOf({
+  kind: is.String,
+  url: is.String,
+  sids: is.ArrayOf(isSid),
+});
 
 export class Question {
   ATCODER_URL = "https://atcoder.jp";

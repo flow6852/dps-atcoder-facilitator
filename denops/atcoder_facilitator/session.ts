@@ -4,12 +4,19 @@ import {
 } from "https://deno.land/std@0.195.0/http/cookie.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import * as vars from "https://deno.land/x/denops_std@v5.0.1/variable/mod.ts";
+import { is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export type SessionDict = {
   kind: "SessionDict";
   csrf_token: string;
   cookieString: string;
 };
+
+const isSessionDict = is.ObjectOf({
+  kind: is.String,
+  csrf_token: is.String,
+  cookieString: is.String,
+});
 
 export class Session {
   csrf_token = "";
