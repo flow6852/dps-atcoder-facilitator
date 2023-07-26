@@ -1,4 +1,4 @@
-import { IOExample, Sid, isIOExample, isSid } from "./types.ts";
+import { IOExample, isIOExample, isSid, Sid } from "./types.ts";
 import { Session } from "./session.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
@@ -6,7 +6,7 @@ import {
   HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { getSetCookies } from "https://deno.land/std@0.195.0/http/cookie.ts";
-import { is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
+import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export type QDict = {
   kind: "QDict";
@@ -318,8 +318,10 @@ export class Question {
       return -1;
     }
 
+    const cwd = await denops.call("getcwd");
+    assert(cwd, is.String);
     const sourceCode = await Deno.readTextFile(
-      (await denops.call("getcwd") as string) + "/" +
+      cwd + "/" +
         file,
     );
 
@@ -477,7 +479,7 @@ export class Question {
       this.sids[sidIndex].status == "WJ"
     ) {
       await this.fetchStatus(denops, session, sidIndex);
-      await denops.call("ddu#ui#do_action", "refreshItems")
+      await denops.call("ddu#ui#do_action", "refreshItems");
       await new Promise((resolve) => setTimeout(resolve, 3 * 1000));
     }
   }

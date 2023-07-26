@@ -4,23 +4,16 @@ import {
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
-  ContestsArgs,
   isContestsArgs,
   isLoginArgs,
   isQuestionsArgs,
   isRunDebugArgs,
   isRunTestArgs,
-  isRunTestResult,
   isSubmitArgs,
-  LoginArgs,
-  QuestionsArgs,
-  RunDebugArgs,
-  RunTestArgs,
   RunTestResult,
-  SubmitArgs,
 } from "./types.ts";
-import { isQDict, QDict, Question } from "./qdict.ts";
-import { isSession, Session } from "./session.ts";
+import { isQDict, Question } from "./qdict.ts";
+import { Session } from "./session.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 type ExecStatus = {
@@ -48,7 +41,9 @@ export function main(denops: Denops): void {
     },
 
     async getQuestions(args: unknown): Promise<void> {
-      for (const qname of (args as QuestionsArgs).qnames) {
+      const qargs = args;
+      assert(qargs, isQuestionsArgs);
+      for (const qname of qargs.qnames) {
         const url = ATCODER_URL + "/contests/" + qname.split("_")[0] +
           "/tasks/" + qname;
         const question = new Question(url);
@@ -56,7 +51,7 @@ export function main(denops: Denops): void {
           if (
             await question.fetchQuestion(
               denops,
-              (args as QuestionsArgs).lang,
+              qargs.lang,
               session,
             )
           ) {
@@ -72,7 +67,9 @@ export function main(denops: Denops): void {
     },
 
     async getContests(args: unknown): Promise<void> {
-      for (const cname of (args as ContestsArgs).cnames) {
+      const cargs = args;
+      assert(cargs, isContestsArgs);
+      for (const cname of cargs.cnames) {
         await getContestsURLs(denops, cname, session);
         const urls = await getContestsURLs(denops, cname, session);
         for (const url of urls) {
@@ -83,7 +80,7 @@ export function main(denops: Denops): void {
             if (
               await question.fetchQuestion(
                 denops,
-                (args as QuestionsArgs).lang,
+                cargs.lang,
                 session,
               )
             ) {
@@ -100,10 +97,14 @@ export function main(denops: Denops): void {
 
     async submit(args: unknown): Promise<unknown> {
       let selector: string;
-      if ((args as SubmitArgs).qname != undefined) {
-        selector = (args as SubmitArgs).qname as string;
-      } else if ((args as SubmitArgs).qdict != undefined) {
-        selector = ((args as SubmitArgs).qdict as QDict).url;
+      const sargs = args;
+      assert(sargs, isSubmitArgs);
+      if (sargs.qname != undefined) {
+        selector = sargs.qname;
+      } else if (sargs.qdict != undefined) {
+        const qdict = sargs.qdict;
+        assert(qdict, isQDict);
+        selector = qdict.url;
       } else {
         return -1;
       }
@@ -122,13 +123,14 @@ export function main(denops: Denops): void {
       return await questions[i].postSubmit(
         denops,
         session,
-        (args as SubmitArgs).file,
-        (args as SubmitArgs).progLang,
+        sargs.file,
+        sargs.progLang,
       );
     },
 
     async refreshStatus(args: unknown): Promise<void> {
-      const statusId = args as number;
+      const statusId = args;
+      assert(statusId, is.Number);
       for (const quest of questions) {
         for (const sid of quest.sids) {
           if (sid.sid == statusId) {
@@ -151,8 +153,10 @@ export function main(denops: Denops): void {
 
     async runTests(args: unknown): Promise<unknown> { // test automatically
       const results: Array<RunTestResult> = new Array(0);
-      const buildCmd = (args as RunTestArgs).buildCmd;
-      const execCmd = (args as RunTestArgs).execCmd;
+      const rargs = args;
+      assert(rargs, isRunTestArgs);
+      const buildCmd = rargs.buildCmd;
+      const execCmd = rargs.execCmd;
       const buildResult = await new Deno.Command(
         buildCmd[0],
         { args: buildCmd.slice(1).length < 1 ? [""] : buildCmd.slice(1) },
@@ -162,7 +166,7 @@ export function main(denops: Denops): void {
         return results;
       }
 
-      const question = new Question((args as RunTestArgs).qdict);
+      const question = new Question(rargs.qdict);
       if (question.ioExamples == undefined) {
         console.error("question not found ioExample");
         return results;
@@ -201,8 +205,10 @@ export function main(denops: Denops): void {
     },
 
     async runDebug(args: unknown): Promise<unknown> { // test manually
-      const buildCmd = (args as RunDebugArgs).buildCmd;
-      const execCmd = (args as RunDebugArgs).execCmd;
+      const rargs = args;
+      assert(rargs, isRunDebugArgs);
+      const buildCmd = rargs.buildCmd;
+      const execCmd = rargs.execCmd;
 
       const buildResult = await new Deno.Command(
         buildCmd[0],
@@ -211,7 +217,7 @@ export function main(denops: Denops): void {
       if (!buildResult.success) {
         console.error(new TextDecoder().decode(buildResult.stderr));
       }
-      const result = await exec((args as RunDebugArgs).debugInput, execCmd);
+      const result = await exec(rargs.debugInput, execCmd);
       return result.output;
     },
   };

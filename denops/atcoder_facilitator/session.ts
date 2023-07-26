@@ -63,7 +63,7 @@ export class Session {
     let cookies = getSetCookies(req.headers);
     let cookieString = mergeCookieString(cookies);
 
-    const revelSession = cookies.find((cookie) =>
+    const revelSession = cookies.find((cookie: Cookie) =>
       cookie.name == "REVEL_SESSION"
     );
     if (revelSession == undefined) return;
