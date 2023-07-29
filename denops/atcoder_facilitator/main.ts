@@ -6,13 +6,14 @@ import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
   isContestsArgs,
   isLoginArgs,
+  isQDict,
   isQuestionsArgs,
   isRunDebugArgs,
   isRunTestArgs,
   isSubmitArgs,
   RunTestResult,
 } from "./types.ts";
-import { isQDict, Question } from "./qdict.ts";
+import { Question } from "./qdict.ts";
 import { Session } from "./session.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
@@ -31,6 +32,7 @@ export function main(denops: Denops): void {
       // return await new Promise((_resolve) => {return questions.map((qdict) => qdict.getQDict())});
       return questions.map((qdict) => qdict.getQDict());
     },
+
     async login(args: unknown): Promise<void> { // {csrf_token, cookie}
       const login = args;
       assert(login, isLoginArgs);

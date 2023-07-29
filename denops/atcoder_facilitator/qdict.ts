@@ -1,4 +1,4 @@
-import { IOExample, isIOExample, isSid, Sid } from "./types.ts";
+import { IOExample, Sid, QDict } from "./types.ts";
 import { Session } from "./session.ts";
 import { Denops } from "https://deno.land/x/denops_std@v5.0.1/mod.ts";
 import {
@@ -7,25 +7,6 @@ import {
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
 import { getSetCookies } from "https://deno.land/std@0.195.0/http/cookie.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
-
-export type QDict = {
-  kind: "QDict";
-  url: string;
-  timeMemoryLimit?: string;
-  title?: string;
-  problem?: string;
-  constraint?: string;
-  inputStyle?: string;
-  outputStyle?: string;
-  ioExamples?: Array<IOExample>;
-  sids: Array<Sid>;
-};
-
-export const isQDict = is.ObjectOf({
-  kind: is.String,
-  url: is.String,
-  sids: is.ArrayOf(isSid),
-});
 
 export class Question {
   ATCODER_URL = "https://atcoder.jp";
@@ -44,7 +25,7 @@ export class Question {
   constructor(arg: string | QDict) {
     if (typeof (arg) == "string") {
       this.url = arg;
-    } else if (arg.kind === "QDict") {
+    } else {
       this.url = arg.url;
       this.title = arg.title;
       this.timeMemoryLimit = arg.timeMemoryLimit;
@@ -66,7 +47,6 @@ export class Question {
       return undefined;
     } else {
       return {
-        kind: "QDict",
         url: this.url,
         timeMemoryLimit: this.timeMemoryLimit,
         title: this.title,

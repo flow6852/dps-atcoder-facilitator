@@ -7,13 +7,11 @@ import * as vars from "https://deno.land/x/denops_std@v5.0.1/variable/mod.ts";
 import { is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export type SessionDict = {
-  kind: "SessionDict";
   csrf_token: string;
   cookieString: string;
 };
 
 export const isSessionDict = is.ObjectOf({
-  kind: is.String,
   csrf_token: is.String,
   cookieString: is.String,
 });
@@ -35,7 +33,6 @@ export class Session {
 
   public getSessionDict(): SessionDict {
     return {
-      kind: "SessionDict",
       csrf_token: this.csrf_token,
       cookieString: this.cookieString,
     };

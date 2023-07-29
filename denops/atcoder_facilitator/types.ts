@@ -1,6 +1,52 @@
-import { isQDict, QDict } from "./qdict.ts";
 import { isSessionDict, SessionDict } from "./session.ts";
 import { is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
+
+export type Sid = {
+  date: string;
+  sid: number;
+  status: string;
+};
+
+export const isSid = is.ObjectOf({
+  date: is.String,
+  sid: is.Number,
+  status: is.String,
+});
+
+export type IOExample = {
+  inputExample: string;
+  outputExample: string;
+  comment?: string;
+};
+
+export const isIOExample = is.ObjectOf({
+  inputExample: is.String,
+  outputExample: is.String,
+});
+
+export type QDict = {
+  url: string;
+  timeMemoryLimit?: string;
+  title?: string;
+  problem?: string;
+  constraint?: string;
+  inputStyle?: string;
+  outputStyle?: string;
+  ioExamples?: Array<IOExample>;
+  sids: Array<Sid>;
+};
+
+export const isQDict = is.ObjectOf({
+  url: is.String,
+  timeMemoryLimit: is.OptionalOf(is.String),
+  title: is.OptionalOf(is.String),
+  problem: is.OptionalOf(is.String),
+  constraint: is.OptionalOf(is.String),
+  inputStyle: is.OptionalOf(is.String),
+  outputStyle: is.OptionalOf(is.String),
+  ioExamples: is.OptionalOf(is.ArrayOf(isIOExample)),
+  sids: is.ArrayOf(isSid),
+});
 
 export type LoginArgs = {
   username: string;
@@ -29,7 +75,6 @@ export type ContestsArgs = {
   lang: string;
   session: SessionDict;
 };
-
 export const isContestsArgs = is.ObjectOf({
   cnames: is.ArrayOf(is.String),
   lang: is.String,
@@ -44,6 +89,8 @@ export type SubmitArgs = {
 };
 
 export const isSubmitArgs = is.ObjectOf({
+  qname: is.OptionalOf(is.String),
+  qdict: is.OptionalOf(isQDict),
   file: is.String,
   progLang: is.String,
 });
@@ -70,29 +117,6 @@ export const isRunDebugArgs = is.ObjectOf({
   debugInput: is.String,
   buildCmd: is.ArrayOf(is.String),
   execCmd: is.ArrayOf(is.String),
-});
-
-export type IOExample = {
-  inputExample: string;
-  outputExample: string;
-  comment?: string;
-};
-
-export const isIOExample = is.ObjectOf({
-  inputExample: is.String,
-  outputExample: is.String,
-});
-
-export type Sid = {
-  date: string;
-  sid: number;
-  status: string;
-};
-
-export const isSid = is.ObjectOf({
-  date: is.String,
-  sid: is.Number,
-  status: is.String,
 });
 
 export type StatusArgs = {
