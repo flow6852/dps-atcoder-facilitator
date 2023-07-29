@@ -21,7 +21,7 @@ export type QDict = {
   sids: Array<Sid>;
 };
 
-const isQDict = is.ObjectOf({
+export const isQDict = is.ObjectOf({
   kind: is.String,
   url: is.String,
   sids: is.ArrayOf(isSid),

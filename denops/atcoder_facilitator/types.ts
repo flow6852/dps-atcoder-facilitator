@@ -7,7 +7,7 @@ export type LoginArgs = {
   password: string;
 };
 
-const isLoginArgs = is.ObjectOf({
+export const isLoginArgs = is.ObjectOf({
   username: is.String,
   password: is.String,
 });
@@ -18,7 +18,7 @@ export type QuestionsArgs = {
   session: SessionDict;
 };
 
-const isQuestionsArgs = is.ObjectOf({
+export const isQuestionsArgs = is.ObjectOf({
   qnames: is.ArrayOf(is.String),
   lang: is.String,
   session: isSessionDict,
@@ -30,7 +30,7 @@ export type ContestsArgs = {
   session: SessionDict;
 };
 
-const isContestsArgs = is.ObjectOf({
+export const isContestsArgs = is.ObjectOf({
   cnames: is.ArrayOf(is.String),
   lang: is.String,
   session: isSessionDict,
@@ -43,7 +43,7 @@ export type SubmitArgs = {
   progLang: string;
 };
 
-const isSubmitArgs = is.ObjectOf({
+export const isSubmitArgs = is.ObjectOf({
   file: is.String,
   progLang: is.String,
 });
@@ -54,7 +54,7 @@ export type RunTestArgs = {
   execCmd: Array<string>;
 };
 
-const isRunTestArgs = is.ObjectOf({
+export const isRunTestArgs = is.ObjectOf({
   qdict: isQDict,
   buildCmd: is.ArrayOf(is.String),
   execCmd: is.ArrayOf(is.String),
@@ -66,7 +66,7 @@ export type RunDebugArgs = {
   execCmd: Array<string>;
 };
 
-const isRunDebugArgs = is.ObjectOf({
+export const isRunDebugArgs = is.ObjectOf({
   debugInput: is.String,
   buildCmd: is.ArrayOf(is.String),
   execCmd: is.ArrayOf(is.String),
@@ -78,7 +78,7 @@ export type IOExample = {
   comment?: string;
 };
 
-const isIOExample = is.ObjectOf({
+export const isIOExample = is.ObjectOf({
   inputExample: is.String,
   outputExample: is.String,
 });
@@ -89,7 +89,7 @@ export type Sid = {
   status: string;
 };
 
-const isSid = is.ObjectOf({
+export const isSid = is.ObjectOf({
   date: is.String,
   sid: is.Number,
   status: is.String,
@@ -100,7 +100,7 @@ export type StatusArgs = {
   session: SessionDict;
 };
 
-const isStatusArgs = is.ObjectOf({
+export const isStatusArgs = is.ObjectOf({
   qdict: is.ArrayOf(isQDict),
   session: isSessionDict,
 });
@@ -112,7 +112,7 @@ export type RunTestResult = {
   result: string;
 };
 
-const isRunTestResult = is.ObjectOf({
+export const isRunTestResult = is.ObjectOf({
   status: is.String,
   inputExample: is.String,
   outputExample: is.String,
@@ -125,7 +125,7 @@ export type StatusResult = {
   status: string;
 };
 
-const isStatusResult = is.ObjectOf({
+export const isStatusResult = is.ObjectOf({
   title: is.String,
   sid: isSid,
   status: is.String,
@@ -135,6 +135,6 @@ export type StatusAfterSubmit = {
   qdict: QDict;
 };
 
-const isStatusAfterSubmit = is.ObjectOf({
+export const isStatusAfterSubmit = is.ObjectOf({
   qdict: isQDict,
 });

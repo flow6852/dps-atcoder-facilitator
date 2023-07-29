@@ -12,7 +12,7 @@ export type SessionDict = {
   cookieString: string;
 };
 
-const isSessionDict = is.ObjectOf({
+export const isSessionDict = is.ObjectOf({
   kind: is.String,
   csrf_token: is.String,
   cookieString: is.String,
