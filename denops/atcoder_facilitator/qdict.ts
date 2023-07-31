@@ -5,7 +5,7 @@ import {
   DOMParser,
   HTMLDocument,
 } from "https://deno.land/x/deno_dom@v0.1.36-alpha/deno-dom-wasm.ts";
-import { getSetCookies } from "https://deno.land/std@0.195.0/http/cookie.ts";
+import { getSetCookies } from "https://deno.land/std@0.196.0/http/mod.ts";
 import { assert, is } from "https://deno.land/x/unknownutil@v3.4.0/mod.ts";
 
 export class Question {
